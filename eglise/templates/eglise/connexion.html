@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connexion - AppMOEG</title>
+    <link rel="stylesheet" href="{% static 'eglise/css/style.css' %}" />
+    <style>
+      body {
+        background: #1a1a1a;
+        color: #fff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      .form-container {
+        max-width: 400px;
+        margin: 50px auto;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 30px;
+        border-radius: 15px;
+      }
+      .form-container h2 {
+        text-align: center;
+        color: #00bfff;
+      }
+      .form-container input {
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        border-radius: 10px;
+        border: 1px solid #555;
+        background: #333;
+        color: #fff;
+      }
+      .form-container input:focus {
+        outline: none;
+        border-color: #00ff7f;
+      }
+      .form-container button {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        background: #00ff7f;
+        color: #000;
+        cursor: pointer;
+      }
+      .form-container button:hover {
+        background: #00cc66;
+      }
+      .error-message {
+        color: #ff4d4d;
+        font-size: 0.9em;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="form-container">
+      <h2>Connexion</h2>
+      {% if error %}
+        <p class="error-message">{{ error }}</p>
+      {% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <input type="text" name="username" placeholder="Nom d'utilisateur" required />
+        <input type="password" name="password" placeholder="Mot de passe" required />
+        <!-- Champ caché pour la redirection -->
+        <input type="hidden" name="next" value="{{ next }}" />
+        <button type="submit">Se connecter</button>
+      </form>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Erreur</title>
+    <style>
+      body {
+        font-family: Arial;
+        background: #ffeaea;
+        padding: 30px;
+      }
+      .box {
+        max-width: 450px;
+        margin: auto;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        border: 2px solid red;
+      }
+      a {
+        display: block;
+        margin-top: 20px;
+        text-align: center;
+        background: red;
+        padding: 12px;
+        color: white;
+        border-radius: 6px;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h3>Une erreur est survenue ❗</h3>
+      <p>{{ message }}</p>
+
+      <a href="/">Retour</a>
+    </div>
+  </body>
+</html>

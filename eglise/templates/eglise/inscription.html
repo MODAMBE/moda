@@ -1,0 +1,211 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Créer un compte - AppMOEG</title>
+
+<link rel="stylesheet" href="{% static 'eglise/css/style.css' %}" />
+
+<link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a1a;
+    color: #fff;
+}
+.form-container {
+    max-width: 500px;
+    margin: 50px auto;
+    background: rgba(0,0,0,0.7);
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+.form-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2em;
+    color: #00bfff;
+}
+.form-container input, 
+.form-container select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 10px;
+    border: 1px solid #555;
+    background: #333;
+    color: #fff;
+    font-size: 1em;
+}
+.form-container input:focus,
+.form-container select:focus {
+    outline: none;
+    border-color: #00ff7f;
+}
+.form-container button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    border: none;
+    border-radius: 10px;
+    background: #00bfff;
+    color: #fff;
+    font-size: 1.1em;
+    cursor: pointer;
+}
+.form-container button:hover {
+    background: #009acd;
+}
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #00ff7f;
+    color: #000;
+    font-size: 1em;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+}
+.login-btn:hover {
+    background: #00cc66;
+}
+.error-message {
+    color: #ff4d4d;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+</style>
+</head>
+<body>
+
+<div class="form-container">
+    <h2>Créer un compte</h2>
+
+    <!-- ✅ Messages d'erreur pour username ou numéro déjà utilisé -->
+    {% if messages %}
+        {% for message in messages %}
+            <p class="error-message">{{ message|safe }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <div>{{ form.nom.label_tag }} {{ form.nom }} {{ form.nom.errors }}</div>
+        <div>{{ form.postnom.label_tag }} {{ form.postnom }} {{ form.postnom.errors }}</div>
+        <div>{{ form.prenom.label_tag }} {{ form.prenom }} {{ form.prenom.errors }}</div>
+        <div>{{ form.sexe.label_tag }} {{ form.sexe }} {{ form.sexe.errors }}</div>
+        <div>{{ form.date_naissance.label_tag }} {{ form.date_naissance }} {{ form.date_naissance.errors }}</div>
+        <div>{{ form.ville.label_tag }} {{ form.ville }} {{ form.ville.errors }}</div>
+        <div>
+            <label for="continent">Continent</label>
+            <select id="continent" name="continent" required>
+                <option value="">Sélectionner un continent</option>
+                <option value="Afrique">Afrique</option>
+                <option value="Europe">Europe</option>
+                <option value="Amérique">Amérique</option>
+                <option value="Asie">Asie</option>
+                <option value="Océanie">Océanie</option>
+                <option value="Antarctique">Antarctique</option>
+            </select>
+        </div>
+        <div>
+            <label for="country">Pays</label>
+            <select id="country" name="pays" required>
+                <option value="">Sélectionner un pays</option>
+            </select>
+        </div>
+        <div>{{ form.phone.label_tag }} <input type="text" name="phone" id="phone" placeholder="Numéro de téléphone" required /> {{ form.phone.errors }}</div>
+        <div>{{ form.image.label_tag }} {{ form.image }} {{ form.image.errors }}</div>
+        <div>{{ form.username.label_tag }} {{ form.username }} {{ form.username.errors }}</div>
+        <div>{{ form.password.label_tag }} {{ form.password }} {{ form.password.errors }}</div>
+        <div>{{ form.conf_password.label_tag }} {{ form.conf_password }} {{ form.conf_password.errors }}</div>
+
+        <button type="submit">S'inscrire</button>
+    </form>
+
+    <form action="{% url 'eglise:connexion' %}" method="get">
+        <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+        <button type="submit" class="login-btn">Se connecter</button>
+    </form>
+</div>
+
+<script>
+const COUNTRIES = {
+    "Afrique": ["Algérie","Angola","Bénin","Botswana","Burkina Faso","Burundi","Cameroun","Cap-Vert","République centrafricaine","Tchad","Comores","République du Congo","République Démocratique du Congo","Côte d'Ivoire","Djibouti","Égypte","Érythrée","Éthiopie","Gabon","Gambie","Ghana","Guinée","Guinée-Bissau","Guinée équatoriale","Kenya","Lesotho","Liberia","Libye","Madagascar","Malawi","Mali","Mauritanie","Maurice","Maroc","Mozambique","Namibie","Niger","Nigeria","Ouganda","Rwanda","Sao Tomé-et-Principe","Sénégal","Seychelles","Sierra Leone","Somalie","Soudan","Soudan du Sud","Swaziland","Tanzanie","Togo","Tunisie","Zambie","Zimbabwe"],
+    "Europe": ["Allemagne","Autriche","Belgique","France","Suisse","Espagne","Italie","Royaume-Uni","Portugal","Pays-Bas","Pologne","Hongrie","Roumanie","Bulgarie","Grèce","Suède","Norvège","Finlande","Danemark","Irlande","Islande","Luxembourg","Malte","Chypre","Tchéquie","Slovaquie","Slovénie","Estonie","Lettonie","Lituanie","Biélorussie","Ukraine","Moldavie","Serbie","Monténégro","Bosnie-Herzégovine","Albanie","Macédoine du Nord","Kosovo"],
+    "Amérique": ["États-Unis","Canada","Brésil","Mexique","Argentine","Colombie","Chili","Pérou","Venezuela","Bolivie","Uruguay","Paraguay","Cuba","République dominicaine","Jamaïque","Haïti","Trinité-et-Tobago"],
+    "Asie": ["Chine","Japon","Inde","Pakistan","Bangladesh","Corée du Sud","Corée du Nord","Indonésie","Malaisie","Philippines","Thaïlande","Vietnam","Singapour","Arabie Saoudite","Émirats arabes unis","Iran","Irak","Israël","Syrie","Liban","Jordanie","Kazakhstan","Ouzbékistan","Turkménistan","Tadjikistan","Kirghizistan","Afghanistan","Mongolie"],
+    "Océanie": ["Australie","Nouvelle-Zélande","Fidji","Papouasie-Nouvelle-Guinée","Samoa","Tonga","Vanuatu","Îles Salomon"],
+    "Antarctique": ["Antarctique"]
+};
+
+const PHONE_CODES = {
+    "Algérie": "+213","Angola": "+244","Bénin": "+229","Botswana": "+267","Burkina Faso": "+226",
+    "Burundi": "+257","Cameroun": "+237","Cap-Vert": "+238","République centrafricaine": "+236",
+    "Tchad": "+235","Comores": "+269","République du Congo": "+242","République Démocratique du Congo": "+243",
+    "Côte d'Ivoire": "+225","Djibouti": "+253","Égypte": "+20","Érythrée": "+291","Éthiopie": "+251",
+    "Gabon": "+241","Gambie": "+220","Ghana": "+233","Guinée": "+224","Guinée-Bissau": "+245",
+    "Guinée équatoriale": "+240","Kenya": "+254","Lesotho": "+266","Liberia": "+231","Libye": "+218",
+    "Madagascar": "+261","Malawi": "+265","Mali": "+223","Mauritanie": "+222","Maurice": "+230",
+    "Maroc": "+212","Mozambique": "+258","Namibie": "+264","Niger": "+227","Nigeria": "+234",
+    "Ouganda": "+256","Rwanda": "+250","Sao Tomé-et-Principe": "+239","Sénégal": "+221","Seychelles": "+248",
+    "Sierra Leone": "+232","Somalie": "+252","Soudan": "+249","Soudan du Sud": "+211","Swaziland": "+268",
+    "Tanzanie": "+255","Togo": "+228","Tunisie": "+216","Zambie": "+260","Zimbabwe": "+263"
+};
+
+const continentSelect = document.getElementById("continent");
+const countrySelect = document.getElementById("country");
+const phoneInput = document.getElementById("phone");
+
+continentSelect.addEventListener("change", function() {
+    const selectedContinent = this.value;
+    countrySelect.innerHTML = "<option value=''> Sélectionner un pays</option>";
+    if (COUNTRIES[selectedContinent]) {
+        COUNTRIES[selectedContinent].forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c;
+            opt.text = c;
+            countrySelect.appendChild(opt);
+        });
+    }
+    phoneInput.value = "";
+});
+
+countrySelect.addEventListener("change", function() {
+    const selectedCountry = this.value;
+    phoneInput.value = PHONE_CODES[selectedCountry] ? PHONE_CODES[selectedCountry] + " " : "";
+});
+
+phoneInput.addEventListener("input", function() {
+    const parts = this.value.split(" ");
+    let code = parts[0] || "";
+    let number = parts[1] || "";
+    number = number.replace(/\D/g,'').slice(0,9);
+    this.value = code + (number ? " " + number : "");
+});
+
+document.querySelector("form").addEventListener("submit", function(e){
+    const parts = phoneInput.value.split(" ");
+    if(parts.length < 2 || parts[1].length !== 9){
+        e.preventDefault();
+        alert("Le numéro de téléphone doit contenir exactement 9 chiffres après le code pays.");
+        phoneInput.focus();
+        return false;
+    }
+});
+</script>
+
+</body>
+</html>

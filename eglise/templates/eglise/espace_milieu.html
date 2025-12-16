@@ -1,0 +1,658 @@
+{% load static %}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+<style>
+  /* ====== STYLE GLOBAL ====== */
+  .publication-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+  }
+  .publication-card p {
+    margin: 5px 0;
+    font-size: 14px;
+  }
+  
+  /* ====== En-tête ====== */
+  .pub-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .pub-header img.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  .pub-header .pub-info {
+    display: flex;
+    flex-direction: column;
+  }
+  .pub-header .pub-info strong {
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .pub-header .pub-info span {
+    font-size: 12px;
+    color: gray;
+  }
+  
+  /* ====== Conteneur images ====== */
+  .img-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+    position: relative;
+  }
+  .fb-img-card {
+    position: relative;
+    cursor: pointer;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .fb-img-card img {
+    width: 100%;
+    height: 230px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+    display: block;
+  }
+  .fb-img-card:hover img {
+    transform: scale(1.1);
+  }
+  .fb-img-card.more::after {
+    content: attr(data-more);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+  
+  /* ====== Vidéos ====== */
+  video {
+    width: 100%;
+    max-height: 320px;
+    border-radius: 10px;
+    margin-top: 10px;
+    object-fit: cover;
+  }
+  @media (max-width: 768px) {
+    video {
+      max-height: 220px;
+    }
+  }
+  
+  /* ====== Actions ====== */
+  .actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+  }
+  .actions button,
+  .actions a {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .actions span {
+    margin-left: 5px;
+    font-size: 14px;
+  }
+  
+  /* ====== Bouton téléchargement ====== */
+  .download-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: #007bff;
+    color: black;
+    text-decoration: none;
+  }
+  .download-btn.disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  
+  /* ====== Viewer global ====== */
+  #fbViewer {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    flex-direction: column;
+  }
+  #fbViewerImg {
+    max-width: 95%;
+    max-height: 90%;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    transform: scale(1);
+    transition: transform 0.4s ease;
+  }
+  #fbViewerImg.zoom {
+    transform: scale(1.15);
+  }
+  
+  /* ====== Menu ⋮ ====== */
+  .menu-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+  .menu-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  .menu-btn:hover {
+    background: #0056b3;
+  }
+  .dropdown-menu {
+    display: none;
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    padding: 8px 0;
+    width: 180px;
+    text-align: left;
+    z-index: 10000;
+  }
+  .dropdown-menu button,
+  .dropdown-menu a {
+    background: none;
+    border: none;
+    width: 100%;
+    padding: 10px 14px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background 0.3s;
+  }
+  .dropdown-menu button:hover,
+  .dropdown-menu a:hover {
+    background: #f1f1f1;
+  }
+  
+  /* ====== Navigation images ====== */
+  #prevImg,
+  #nextImg {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 2rem;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 10px;
+  }
+  #prevImg {
+    left: 20px;
+  }
+  #nextImg {
+    right: 20px;
+  }
+  #closeFBViewer {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 2rem;
+    color: #fff;
+    cursor: pointer;
+  }
+  
+  /* ====== Popup utilisateur ====== */
+  #userPopup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    z-index: 1000;
+    text-align: center;
+    width: 300px;
+  }
+  #userPopup p {
+    margin-bottom: 15px;
+  }
+  #userPopup a,
+  #userPopup button {
+    margin: 5px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  #addToDiscussionBtn {
+    background: #007bff;
+    color: #fff;
+  }
+  #cancelPopupBtn {
+    background: #ccc;
+    border: none;
+  }
+  
+  /* ====== Popup vidéo plein écran ====== */
+  #videoPopup {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    justify-content: center;
+    align-items: center;
+  }
+  #videoPopup video {
+    max-width: 90%;
+    max-height: 80%;
+    border-radius: 10px;
+    background: #000;
+  }
+  #closeVideoPopup {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: white;
+    font-size: 35px;
+    cursor: pointer;
+  }
+  
+  @media (max-width: 768px) {
+    .img-container {
+      grid-template-columns: 1fr;
+    }
+    #fbViewerImg {
+      max-width: 100%;
+      max-height: 80%;
+    }
+  }
+  /* styles.css */
+  .badge {
+    background: yellow;
+    color: black;
+    font-size: 0.7rem;
+    border-radius: 50%;
+    padding: 2px 6px;
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+  .new-invitation-dot {
+    width: 10px;
+    height: 10px;
+    background: yellow;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    border: 1px solid white;
+  }
+</style>
+
+{% for pub in publications %}
+  <div class="publication-card" id="pub{{ pub.id }}">
+    <div class="pub-header">
+      <a href="#" class="user-popup-trigger" data-user-id="{{ pub.auteur.id }}" data-user-name="{{ pub.auteur.username }}">
+        {% if pub.auteur.profile and pub.auteur.profile.image %}
+          <img src="{{ pub.auteur.profile.image.url }}" class="avatar" alt="avatar" />
+        {% else %}
+          <img src="{% static 'eglise/icons/default-profile.png' %}" class="avatar" alt="avatar" />
+
+          <img src="{% static 'icons/default-profile.png' %}" class="avatar" alt="avatar" />
+        {% endif %}
+      </a>
+      <div class="pub-info">
+        <strong class="user-popup-trigger" data-user-id="{{ pub.auteur.id }}" data-user-name="{{ pub.auteur.username }}">{{ pub.auteur.username }}</strong>
+        <span>{{ pub.created_at|date:'d M Y H:i' }}</span>
+      </div>
+    </div>
+
+    {% if pub.contenu %}
+      <p>{{ pub.contenu }}</p>
+    {% endif %}
+
+    {% if pub.medias.count > 0 %}
+      <div class="img-container">
+        {% for media in pub.medias.all %}
+          {% if media.type == 'image' %}
+            {% if forloop.counter <= 4 %}
+              {% if forloop.counter == 4 and pub.medias.count > 4 %}
+                <div class="fb-img-card more" data-more="+{{ pub.medias.count|add:'-4' }}" onclick="openFBViewer({{ pub.id }}, {{ forloop.counter0 }})">
+                  <img src="{{ media.fichier.url }}" alt="image" />
+                </div>
+              {% else %}
+                <div class="fb-img-card" onclick="openFBViewer({{ pub.id }}, {{ forloop.counter0 }})">
+                  <img src="{{ media.fichier.url }}" alt="image" />
+                </div>
+              {% endif %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% for media in pub.medias.all %}
+      {% if media.type == 'video' %}
+        <video class="autoplay-video" controls playsinline preload="metadata" onclick="openVideoPopup('{{ media.fichier.url }}')">
+          <source src="{{ media.fichier.url }}" type="video/mp4" />Votre navigateur ne supporte pas la lecture vidéo.
+        </video>
+        {% if pub.vendable %}
+          <a class="download-btn disabled">Téléchargement indisponible 🔒</a>
+        {% else %}
+          <a href="{{ media.fichier.url }}" class="download-btn" download>⬇ Télécharger la vidéo</a>
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+
+    <div class="actions">
+      <button class="like-btn" data-id="{{ pub.id }}">
+        {% if pub.liked_by_user %}
+          ❤️
+        {% else %}
+          🤍
+        {% endif %} <span class="like-count">{{ pub.likes.count }}</span>
+      </button>
+      <a href="{% url 'eglise:details_publication' pub.id %}" class="comment-btn">💬 {{ pub.commentaires.count }}</a>
+      <button class="share-btn" data-id="{{ pub.id }}">🔗 Partager</button>
+    </div>
+  </div>
+{% empty %}
+  <p>Aucune publication disponible.</p>
+{% endfor %}
+
+<!-- ====== Viewer & Popups ====== -->
+<div id="fbViewer">
+  <span id="closeFBViewer">&times;</span>
+  <img id="fbViewerImg" src="" alt="" />
+  <div class="menu-wrapper">
+    <button class="menu-btn" onclick="toggleMenu()">⋮</button>
+    <div id="dropdownMenu" class="dropdown-menu">
+      <button id="likeBtn">❤️ <span id="likeCount">0</span></button>
+      <button id="commentBtn">💬 Commenter</button>
+      <button id="shareBtn">🔗 Partager</button>
+      <a id="downloadLink" class="download-btn" href="#" download>⬇ Télécharger</a>
+    </div>
+  </div>
+  <button id="prevImg">&larr;</button>
+  <button id="nextImg">&rarr;</button>
+</div>
+
+<!-- popup.html -->
+<div id="userPopup">
+  <p id="popupText"></p>
+  <button id="addToDiscussionBtn">➕ Ajouter à la discussion</button>
+  <button id="cancelPopupBtn">Passer</button>
+</div>
+
+{% for inv in pending_invitations %}
+  <div class="invitation-card" data-id="{{ inv.id }}">
+    {{ inv.from_user.username }}
+    <button class="accept-btn">Accepter</button>
+    <button class="reject-btn">Refuser</button>
+  </div>
+{% endfor %}
+
+<div id="videoPopup">
+  <span id="closeVideoPopup">&times;</span>
+  <video id="popupVideo" controls autoplay playsinline></video>
+</div>
+<script>
+  // ==== Viewer images ====
+  let currentImages = [],
+    currentIndex = 0,
+    currentPubId = null
+  
+  function openFBViewer(pubId, index) {
+    currentImages = Array.from(document.querySelectorAll(`#pub${pubId} .fb-img-card img`)).map((i) => i.src)
+    currentIndex = index
+    currentPubId = pubId
+    updateFBViewer()
+    document.getElementById('fbViewer').style.display = 'flex'
+    const imgViewer = document.getElementById('fbViewerImg')
+    imgViewer.classList.add('zoom')
+    setTimeout(() => imgViewer.classList.remove('zoom'), 800)
+    updateViewerActions()
+  }
+  
+  function updateFBViewer() {
+    const imgViewer = document.getElementById('fbViewerImg')
+    const downloadLink = document.getElementById('downloadLink')
+    imgViewer.src = currentImages[currentIndex]
+    downloadLink.href = currentImages[currentIndex]
+  }
+  
+  document.getElementById('closeFBViewer').onclick = () => (document.getElementById('fbViewer').style.display = 'none')
+  document.getElementById('prevImg').onclick = () => {
+    currentIndex = (currentIndex - 1 + currentImages.length) % currentImages.length
+    updateFBViewer()
+    updateViewerActions()
+  }
+  document.getElementById('nextImg').onclick = () => {
+    currentIndex = (currentIndex + 1) % currentImages.length
+    updateFBViewer()
+    updateViewerActions()
+  }
+  
+  function toggleMenu() {
+    const menu = document.getElementById('dropdownMenu')
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block'
+  }
+  
+  window.onclick = function (e) {
+    if (!e.target.matches('.menu-btn')) {
+      const d = document.getElementById('dropdownMenu')
+      if (d && d.style.display === 'block') d.style.display = 'none'
+    }
+  }
+  
+  // ==== Cookies & CSRF helper ====
+  function getCookie(name) {
+    let cookieValue = null
+    if (document.cookie && document.cookie !== '') {
+      document.cookie.split(';').forEach((cookie) => {
+        cookie = cookie.trim()
+        if (cookie.startsWith(name + '=')) cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
+      })
+    }
+    return cookieValue
+  }
+  
+  // ==== Likes & Share ====
+  async function toggleLike(pubId, likeBtn) {
+    const res = await fetch(`/publication/${pubId}/like/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    const data = await res.json()
+    if (data.success) {
+      likeBtn.innerHTML = (data.liked ? '❤️' : '🤍') + ` <span class="like-count">${data.likes_count}</span>`
+    }
+  }
+  
+  function sharePublication(pubId) {
+    const shareUrl = window.location.origin + `/publication/${pubId}/`
+    const shareData = { title: 'Publication', text: 'Découvre cette publication', url: shareUrl }
+    if (navigator.share) navigator.share(shareData)
+    else {
+      navigator.clipboard.writeText(shareUrl)
+      alert('Lien copié ✅')
+    }
+  }
+  
+  // ==== Attach events to publications ====
+  document.querySelectorAll('.publication-card').forEach((card) => {
+    const pubId = card.querySelector('.like-btn').dataset.id
+    card.querySelector('.like-btn').addEventListener('click', () => toggleLike(pubId, card.querySelector('.like-btn')))
+    card.querySelector('.share-btn').addEventListener('click', () => sharePublication(pubId))
+  })
+  
+  // ==== Video popup ====
+  function openVideoPopup(url) {
+    const popup = document.getElementById('videoPopup')
+    const video = document.getElementById('popupVideo')
+    video.src = url
+    popup.style.display = 'flex'
+    video.play()
+  }
+  document.getElementById('closeVideoPopup').addEventListener('click', () => {
+    const popup = document.getElementById('videoPopup')
+    const video = document.getElementById('popupVideo')
+    video.pause()
+    popup.style.display = 'none'
+  })
+  
+  // ==== Auto play videos on screen ====
+  const videos = document.querySelectorAll('.autoplay-video')
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => (entry.isIntersecting ? entry.target.play() : entry.target.pause()))
+    },
+    { threshold: 0.5 }
+  )
+  videos.forEach((video) => observer.observe(video))
+  
+  // ==== Viewer actions for 3-dot menu ====
+  function updateViewerActions() {
+    const pubCard = document.getElementById('pub' + currentPubId)
+    const likeBtn = document.getElementById('likeBtn')
+    const originalLikeBtn = pubCard.querySelector('.like-btn')
+    likeBtn.querySelector('#likeCount').textContent = originalLikeBtn.querySelector('.like-count').textContent
+    likeBtn.onclick = () => toggleLike(currentPubId, originalLikeBtn)
+    document.getElementById('commentBtn').onclick = () => (window.location.href = pubCard.querySelector('.comment-btn').href)
+    document.getElementById('shareBtn').onclick = () => sharePublication(currentPubId)
+    document.getElementById('downloadLink').href = pubCard.querySelector('img.fb-img-card, video')?.src || '#'
+  }
+  
+  // ==== User popup for invitations ====
+  document.querySelectorAll('.user-popup-trigger').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault()
+      const popup = document.getElementById('userPopup')
+      document.getElementById('popupText').textContent = 'Voulez-vous discuter avec ' + el.dataset.userName + ' ?'
+      const addBtn = document.getElementById('addToDiscussionBtn')
+      addBtn.dataset.userId = el.dataset.userId
+      popup.style.display = 'block'
+    })
+  })
+  
+  document.getElementById('cancelPopupBtn').addEventListener('click', () => {
+    document.getElementById('userPopup').style.display = 'none'
+  })
+  
+  async function sendInvitation(userId) {
+    try {
+      const resp = await fetch("{% url 'eglise:envoyer_invitation' 0 %}".replace('/0/', '/' + userId + '/'), {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'X-Requested-With': 'XMLHttpRequest',
+          Accept: 'application/json'
+        }
+      })
+      const data = await resp.json()
+      if (data.success) {
+        alert('Invitation envoyée ✅')
+        const popup = document.getElementById('userPopup')
+        if (popup) popup.style.display = 'none'
+        const badge = document.getElementById('notif-badge')
+        if (badge) {
+          badge.textContent = parseInt(badge.textContent || 0) + 1
+          badge.style.display = 'inline-block'
+        }
+      } else alert(data.error || 'Erreur inconnue.')
+    } catch (e) {
+      console.error(e)
+      alert('Erreur réseau 😢')
+    }
+  }
+  
+  const addBtn = document.getElementById('addToDiscussionBtn')
+  if (addBtn)
+    addBtn.addEventListener('click', (e) => {
+      e.preventDefault()
+      sendInvitation(addBtn.dataset.userId)
+    })
+  
+  // ==== Accept / Reject invitations ====
+  document.querySelectorAll('.accept-btn').forEach((btn) => {
+    btn.addEventListener('click', async function (e) {
+      e.preventDefault()
+      const invId = this.dataset.id
+      try {
+        const res = await fetch(`/invitation/accept/${invId}/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        const data = await res.json()
+        if (data.success) this.closest('.invitation-item').remove()
+      } catch (err) {
+        console.error(err)
+      }
+    })
+  })
+  
+  document.querySelectorAll('.reject-btn').forEach((btn) => {
+    btn.addEventListener('click', async function (e) {
+      e.preventDefault()
+      const invId = this.dataset.id
+      try {
+        const res = await fetch(`/invitation/reject/${invId}/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': getCookie('csrftoken'), 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        const data = await res.json()
+        if (data.success) this.closest('.invitation-item').remove()
+      } catch (err) {
+        console.error(err)
+      }
+    })
+  })
+  
+  // ==== Toggle invites list ====
+  function toggleInvitations() {
+    const el = document.getElementById('invitesList')
+    if (!el) return
+    el.style.display = el.style.display === 'none' || el.style.display === '' ? 'block' : 'none'
+  }
+</script>

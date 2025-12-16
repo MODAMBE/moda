@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block toolbar %}
+{% endblock toolbar %}
+<!-- Empêche toute barre d’action héritée d’un autre template -->
+    
+{% block content %}
+
+<style>
+.video-container { width: 100%; height: 80vh; position: relative; margin-bottom: 20px; }
+video { width: 100%; height: 100%; object-fit: contain; background: black; }
+.user-info { position: absolute; top: 15px; left: 15px; display:flex; align-items:center; gap:10px; color:white; }
+.user-info img { width:50px; height:50px; border-radius:12px; object-fit:cover; }
+.actions { position:absolute; right:20px; bottom:20px; display:flex; flex-direction:column; gap:15px; }
+.actions a { background: rgba(0,0,0,0.6); padding:10px 14px; color:white; border-radius:10px; text-decoration:none; }
+</style>
+
+{% for v in videos %}
+  <div class="video-container">
+    <video controls 
+    {% if forloop.first %} 
+      autoplay muted 
+    {% endif %}>
+      <source src="{{ v.fichier.url }}" type="video/mp4" />
+      Votre navigateur ne supporte pas la balise video.
+    </video>
+
+    <div class="user-info">
+      {% if v.chaine and v.chaine.avatar %}
+        <img src="{{ v.chaine.avatar.url }}" alt="avatar" />
+      {% endif %}
+      {% if v.chaine %}
+        <a href="{% url 'eglise:detail_chaine' v.chaine.username %}" style="color:white;"><b>{{ v.chaine.nom }}</b></a>
+      {% elif v.channel %}
+        <span style="color:white;"><b>{{ v.channel.name }}</b></span>
+      {% endif %}
+    </div>
+
+    <div class="actions">
+      <a href="{% url 'eglise:like_video' v.id %}">👍 {{ v.likes.count }}</a>
+      <a href="{{ v.fichier.url }}" download>⬇ Télécharger</a>
+      <a href="#">🔗 Partager</a>
+    </div>
+  </div>
+{% empty %}
+  <p>Aucune vidéo récente pour le moment.</p>
+{% endfor %}
+
+{% endblock %}

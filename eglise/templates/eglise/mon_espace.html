@@ -1,0 +1,19 @@
+<h1>Mon Espace</h1>
+
+<h2>Mes chaînes</h2>
+<ul>
+  {% for c in mes_chaines %}
+    <li>{{ c.nom }}</li>
+  {% empty %}
+    <li>Aucune chaîne.</li>
+  {% endfor %}
+</ul>
+
+<h2>Mes vidéos</h2>
+<ul>
+  {% for v in mes_videos %}
+    <li>{{ v.titre }}</li>
+  {% empty %}
+    <li>Aucune vidéo.</li>
+  {% endfor %}
+</ul>

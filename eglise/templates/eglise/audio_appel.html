@@ -1,0 +1,608 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Appel audio - {{ correspondant.username }}</title>
+
+    <link rel="stylesheet" href="{% static 'eglise/css/style.css' %}" />
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+
+    <style>
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        margin: 0;
+        background: #121b22;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        color: #e1e1e1;
+        flex-direction: column;
+      }
+      .container {
+        width: 90%;
+        max-width: 500px;
+        background: #1e2a33;
+        border-radius: 15px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+      }
+      .avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #25d366;
+        margin-bottom: 15px;
+      }
+      .username {
+        font-size: 1.6rem;
+        font-weight: bold;
+        margin-bottom: 5px;
+        text-align: center;
+      }
+      .status {
+        font-size: 1rem;
+        opacity: 0.8;
+        margin-bottom: 25px;
+        text-align: center;
+      }
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+      }
+      .controls button {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: none;
+        font-size: 26px;
+        color: #fff;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .controls button:hover {
+        transform: scale(1.1);
+      }
+      #accept {
+        background: #25d366;
+      }
+      #reject,
+      #hangup {
+        background: #e53935;
+      }
+      #hangup {
+        display: none;
+      }
+      .call-log {
+        margin-top: 20px;
+        font-size: 0.95rem;
+        text-align: center;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      {% if correspondant.profile and correspondant.profile.image %}
+        <img src="{{ correspondant.profile.image.url }}" class="avatar" />
+      {% else %}
+
+        <img src="{% static 'eglise/icons/default-profile.png' %}" class="avatar" />
+
+        <img src="{% static 'icons/default-profile.png' %}" class="avatar" />
+
+      {% endif %}
+
+      <div class="username">{{ correspondant.username }}</div>
+      <div class="status" id="statusText">Connexion à {{ correspondant.username }}...</div>
+
+      <div class="controls">
+        <button id="accept">📞</button>
+        <button id="reject">❌</button>
+        <button id="hangup">📴</button>
+      </div>
+
+      <div class="call-log" id="callLog"></div>
+    </div>
+
+    <audio id="remoteAudio" autoplay></audio>
+
+    <script>
+      const statusText = document.getElementById('statusText')
+      const callLog = document.getElementById('callLog')
+      const acceptBtn = document.getElementById('accept')
+      const rejectBtn = document.getElementById('reject')
+      const hangupBtn = document.getElementById('hangup')
+      const remoteAudio = document.getElementById('remoteAudio')
+      const appelID = '{{ appel_id }}'
+      
+      // WebRTC / WS
+      let peer = null
+      let ws = null
+      let localStream = null
+      let wsReady = false
+      
+      // roles / state
+      let isInitiator = false // true si on a initié l'appel (A)
+      let remoteInvited = false // true si on a reçu un invite (B)
+      let callEstablished = false
+      
+      // Sonnerie
+      let ringtone = null
+      let ringtoneUnlocked = false
+      let ringtonePlaying = false
+      
+      // Prépare l'objet audio (ne lance pas la lecture)
+      function prepareRingtone() {
+        try {
+
+          ringtone = new Audio("{% static 'eglise/sounds/ringtone.mp3' %}")
+
+          ringtone = new Audio("{% static 'sounds/ringtone.mp3' %}")
+
+          ringtone.loop = true
+          ringtone.volume = 1.0
+        } catch (e) {
+          console.warn('Impossible de préparer la sonnerie :', e)
+          ringtone = null
+        }
+      }
+      prepareRingtone()
+      
+      // Débloquer la lecture audio après la première interaction utilisateur (autoplay policy)
+      function unlockAudioOnFirstInteraction() {
+        const unlock = () => {
+          if (!ringtone) return
+          ringtone
+            .play()
+            .then(() => {
+              ringtone.pause()
+              ringtone.currentTime = 0
+              ringtoneUnlocked = true
+            })
+            .catch(() => {
+              ringtoneUnlocked = false
+            })
+            .finally(() => {
+              window.removeEventListener('click', unlock)
+              window.removeEventListener('touchstart', unlock)
+            })
+        }
+        window.addEventListener('click', unlock)
+        window.addEventListener('touchstart', unlock)
+      }
+      unlockAudioOnFirstInteraction()
+      
+      function playRingtoneNow() {
+        if (!ringtone) return
+        if (!ringtoneUnlocked) {
+          ringtone.play().catch(() => {})
+          ringtonePlaying = true
+          return
+        }
+        try {
+          ringtone.currentTime = 0
+          ringtone.play().catch(() => {})
+          ringtonePlaying = true
+        } catch (e) {
+          console.warn('Erreur playRingtone:', e)
+        }
+      }
+      
+      function stopRingtoneNow() {
+        if (!ringtone) return
+        try {
+          ringtone.pause()
+          ringtone.currentTime = 0
+          ringtonePlaying = false
+        } catch (e) {
+          console.warn('Erreur stopRingtone:', e)
+        }
+      }
+      
+      // Vérification utilisateur en ligne
+      async function checkUserOnline() {
+        try {
+          const response = await fetch(`/api/utilisateur/en_ligne/{{ correspondant.id }}/`)
+          if (!response.ok) return
+          const data = await response.json()
+      
+          if (!data.online) {
+            statusText.textContent = 'Hors ligne ❌ (appel manqué)'
+            await fetch(`/api/appel/${appelID}/maj/?statut=manque`)
+            callLog.textContent = '❌ Appel manqué enregistré'
+            setTimeout(() => (location.href = "{% url 'eglise:discussion_detail_user' correspondant.id %}"), 2000)
+          } else {
+            statusText.textContent = 'En ligne ✅'
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      }
+      checkUserOnline()
+      
+      /** WEBRTC **/
+      function initPeer() {
+        // Ne pas recréer si déjà existant
+        if (peer) return
+      
+        peer = new RTCPeerConnection({
+          iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        })
+      
+        peer.onicecandidate = (e) => {
+          if (e.candidate && wsReady) {
+            ws.send(JSON.stringify({ type: 'candidate', candidate: e.candidate }))
+          }
+        }
+      
+        peer.ontrack = (e) => {
+          remoteAudio.srcObject = e.streams[0]
+        }
+      
+        // Si la connexion change d'état
+        peer.onconnectionstatechange = () => {
+          if (peer.connectionState === 'connected') {
+            callEstablished = true
+            stopRingtoneNow()
+            statusText.textContent = 'Connecté 🎧'
+          }
+        }
+      }
+      
+      /** WEBSOCKET **/
+      function initWebSocket() {
+        if (ws) return
+        ws = new WebSocket('wss://' + window.location.host + '/ws/appel/' + appelID + '/')
+      
+        ws.onopen = () => {
+          wsReady = true
+          // informer le groupe qu'on est présent (optionnel)
+        }
+      
+        ws.onmessage = async (event) => {
+          const data = JSON.parse(event.data)
+      
+          // Messages de signalisation / contrôle: invite, accept, offer, answer, candidate, hangup
+          if (data.type === 'invite') {
+            // appel entrant : jouer sonnerie et garder l'offer/flow pour après accept
+            remoteInvited = true
+            isInitiator = false
+            statusText.textContent = 'Appel entrant 🔔'
+            playRingtoneNow()
+            callLog.textContent = 'Sonnerie...'
+            // We do NOT setRemoteDescription here (no offer sent). Caller will send offer after receiving 'accept'
+            return
+          }
+      
+          if (data.type === 'accept') {
+            // le callee a accepté -> si on est initiator (caller), on doit maintenant créer offer
+            if (isInitiator) {
+              // init peer & media then create offer
+              try {
+                initPeer()
+                localStream = await navigator.mediaDevices.getUserMedia({
+                  audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                  }
+                })
+                localStream.getTracks().forEach((t) => peer.addTrack(t, localStream))
+      
+                const offer = await peer.createOffer()
+                await peer.setLocalDescription(offer)
+      
+                // envoyer offer
+                if (wsReady) {
+                  ws.send(JSON.stringify({ type: 'offer', offer }))
+                } else {
+                  // attente si ws pas ready
+                  const wait = setInterval(() => {
+                    if (wsReady) {
+                      ws.send(JSON.stringify({ type: 'offer', offer }))
+                      clearInterval(wait)
+                    }
+                  }, 50)
+                }
+                // jouer sonnerie sortante en attendant answer (optionnel)
+                playRingtoneNow()
+                statusText.textContent = 'En attente de réponse...'
+              } catch (err) {
+                console.error("Erreur lors de la création de l'offer:", err)
+              }
+            }
+            return
+          }
+      
+          if (data.type === 'offer') {
+            // callee reçoit l'offer : setRemoteDescription, créer answer et envoyer answer
+            try {
+              initPeer()
+              // on suppose que callee a cliqué "Accepter" avant d'envoyer 'accept' (nous avons flow accept->caller sends offer)
+              // si localStream pas présent, on doit l'obtenir maintenant
+              if (!localStream) {
+                localStream = await navigator.mediaDevices.getUserMedia({
+                  audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                  }
+                })
+                localStream.getTracks().forEach((t) => peer.addTrack(t, localStream))
+              }
+      
+              await peer.setRemoteDescription(new RTCSessionDescription(data.offer))
+      
+              const answer = await peer.createAnswer()
+              await peer.setLocalDescription(answer)
+      
+              // envoyer answer
+              if (wsReady) {
+                ws.send(JSON.stringify({ type: 'answer', answer }))
+              } else {
+                const wait = setInterval(() => {
+                  if (wsReady) {
+                    ws.send(JSON.stringify({ type: 'answer', answer }))
+                    clearInterval(wait)
+                  }
+                }, 50)
+              }
+              stopRingtoneNow()
+              statusText.textContent = 'Appel accepté — en cours de connexion...'
+            } catch (err) {
+              console.error("Erreur lors du traitement de l'offer:", err)
+            }
+            return
+          }
+      
+          if (data.type === 'answer') {
+            // caller reçoit la réponse
+            try {
+              if (!peer) initPeer()
+              await peer.setRemoteDescription(new RTCSessionDescription(data.answer))
+              stopRingtoneNow()
+              statusText.textContent = 'Réponse reçue — connexion en cours...'
+            } catch (err) {
+              console.error('Erreur lors du setRemoteDescription(answer):', err)
+            }
+            return
+          }
+      
+          if (data.type === 'candidate' && data.candidate) {
+            try {
+              if (!peer) initPeer()
+              await peer.addIceCandidate(new RTCIceCandidate(data.candidate))
+            } catch (err) {
+              console.warn('Erreur addIceCandidate:', err)
+            }
+            return
+          }
+      
+          if (data.type === 'hangup') {
+            // l'autre a raccroché
+            stopRingtoneNow()
+            callLog.textContent = "📴 L'autre participant a raccroché"
+            statusText.textContent = 'Appel terminé'
+            cleanupCall()
+            return
+          }
+      
+          // system events (participant_connected etc.)
+          if (data.event === 'participant_connected') {
+            // si on avez lancé un invite et on attend accept, on peut jouer sonnerie sortante
+            if (isInitiator && !callEstablished) {
+              playRingtoneNow()
+            }
+          }
+        }
+      
+        ws.onclose = () => {
+          wsReady = false
+        }
+      
+        ws.onerror = (e) => {
+          console.error('WebSocket erreur:', e)
+        }
+      }
+      
+      // Nettoyage appel
+      function cleanupCall() {
+        try {
+          if (localStream) {
+            localStream.getTracks().forEach((t) => t.stop())
+            localStream = null
+          }
+        } catch (e) {}
+        try {
+          if (peer) {
+            peer.close()
+            peer = null
+          }
+        } catch (e) {}
+        try {
+          if (ws) {
+            ws.close()
+            ws = null
+            wsReady = false
+          }
+        } catch (e) {}
+        isInitiator = false
+        remoteInvited = false
+        callEstablished = false
+        stopRingtoneNow()
+        acceptBtn.style.display = 'inline-block'
+        rejectBtn.style.display = 'inline-block'
+        hangupBtn.style.display = 'none'
+      }
+      
+      /** BOUTON "ACCEPTER" */
+      acceptBtn.onclick = async () => {
+        // Deux comportements :
+        // - Si on a reçu un invite (remoteInvited === true) => on est callee : on envoie "accept" au caller (ne créons pas l'answer ici)
+        // - Sinon => on est caller (initiateur) : on envoie "invite" au callee (demande d'appel)
+        if (!ws) initWebSocket()
+      
+        if (remoteInvited) {
+          // Callee: accepte l'appel entrant -> envoie 'accept' pour dire qu'il est prêt
+          stopRingtoneNow()
+          try {
+            // assure qu'on a l'audio local (mais on laissera le createAnswer seulement après réception de l'offer)
+            // ici on just prepare localStream so that answer flow can add tracks before creating answer
+            // However in our flow the caller will send offer after receiving 'accept'
+            localStream = await navigator.mediaDevices.getUserMedia({
+              audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+              }
+            })
+            // don't add tracks to peer yet; peer will be created when offer arrives (initPeer called in onmessage)
+          } catch (err) {
+            console.warn("Impossible d'accéder au micro:", err)
+            // we still send accept even if no mic; caller will proceed
+          }
+      
+          // Inform caller we accept (then caller creates offer)
+          if (wsReady) {
+            ws.send(JSON.stringify({ type: 'accept' }))
+          } else {
+            const wait = setInterval(() => {
+              if (wsReady) {
+                ws.send(JSON.stringify({ type: 'accept' }))
+                clearInterval(wait)
+              }
+            }, 50)
+          }
+      
+          // UI
+          statusText.textContent = 'Appel accepté — en attente de connexion...'
+          acceptBtn.style.display = 'none'
+          rejectBtn.style.display = 'none'
+          hangupBtn.style.display = 'inline-block'
+          callLog.textContent = '✅ Vous avez accepté'
+          return
+        } else {
+          // Caller: init invite
+          isInitiator = true
+          if (!ws) initWebSocket()
+      
+          // Send invite signal to callee (no offer yet)
+          if (wsReady) {
+            ws.send(JSON.stringify({ type: 'invite' }))
+          } else {
+            const wait = setInterval(() => {
+              if (wsReady) {
+                ws.send(JSON.stringify({ type: 'invite' }))
+                clearInterval(wait)
+              }
+            }, 50)
+          }
+          let waveInterval = null
+          let waveActive = false
+          function startWaveAnimation(baseText) {
+            stopWaveAnimation()
+      
+            const frames = ['●○○', '○●○', '○○●']
+            let index = 0
+            waveActive = true
+      
+            waveInterval = setInterval(() => {
+              if (!waveActive) return
+              statusText.textContent = baseText + ' ' + frames[index]
+              index = (index + 1) % frames.length
+            }, 500)
+          }
+      
+          function stopWaveAnimation() {
+            waveActive = false
+            if (waveInterval) {
+              clearInterval(waveInterval)
+              waveInterval = null
+            }
+          }
+      
+          // Play outgoing ringtone while waiting for accept
+          playRingtoneNow()
+          statusText.textContent = 'Appel en cours... '
+          statusText.textContent = 'Appel en cours... '
+          startWaveAnimation('Appel en cours')
+      
+          callLog.textContent = 'Invitation envoyée'
+          acceptBtn.style.display = 'none'
+          rejectBtn.style.display = 'inline-block' // on peut refuser/cancel
+          hangupBtn.style.display = 'inline-block'
+          return
+        }
+      }
+      
+      /** BOUTON REFUSER **/
+      rejectBtn.onclick = async () => {
+        // Si on a reçu invitation (remoteInvited) => je refuse l'appel entrant: envoie 'hangup' ou 'reject'
+        stopRingtoneNow()
+        if (!ws) initWebSocket()
+        try {
+          if (wsReady) {
+            // send hangup/reject
+            ws.send(JSON.stringify({ type: 'hangup' }))
+          } else {
+            const wait = setInterval(() => {
+              if (wsReady) {
+                ws.send(JSON.stringify({ type: 'hangup' }))
+                clearInterval(wait)
+              }
+            }, 50)
+          }
+        } catch (e) {
+          console.warn('Erreur envoi hangup:', e)
+        }
+      
+        // update backend status
+        await fetch(`/api/appel/${appelID}/maj/?statut=refuse`)
+        callLog.textContent = '❌ Appel refusé'
+        setTimeout(() => (location.href = "{% url 'eglise:discussion_detail_user' correspondant.id %}"), 1500)
+      }
+      
+      /** BOUTON RACCROCHER **/
+      hangupBtn.onclick = async () => {
+        statusText.textContent = 'Appel terminé 👋'
+        stopRingtoneNow()
+      
+        try {
+          if (wsReady && ws) ws.send(JSON.stringify({ type: 'hangup' }))
+        } catch (e) {}
+      
+        await fetch(`/api/appel/${appelID}/maj/?statut=termine`)
+        cleanupCall()
+        callLog.textContent = '📴 Appel terminé'
+        setTimeout(() => (location.href = "{% url 'eglise:discussion_detail_user' correspondant.id %}"), 1500)
+      }
+      
+      // Ouvrir le websocket dès le chargement pour pouvoir recevoir 'invite'
+      try {
+        initWebSocket()
+      } catch (e) {
+        console.warn("Impossible d'ouvrir ws au chargement:", e)
+      }
+      
+      // Petit helper: si on est caller and receives 'accept', we create offer (handled in ws.onmessage)
+      // Si on reçoit offer on callee, the handler sets remote desc and creates answer (handled in ws.onmessage)
+      
+      // Jouer la sonnerie initiale uniquement si on veut (généralement on ne lance pas automatiquement)
+      // Ici on n'appelle pas playRingtoneNow() automatiquement pour éviter autoplay problems;
+      // le ringtone sera joué à la réception d'un 'invite' (entrant) ou après envoi d'un 'invite' (sortant).
+    </script>
+  </body>
+</html>

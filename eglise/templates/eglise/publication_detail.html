@@ -1,0 +1,244 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{ publication.titre }} - Détails</title>
+
+    <link rel="stylesheet" href="{% static 'eglise/css/style.css' %}" />
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+    <style>
+      /* ===== Reset & Base ===== */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      
+      body {
+        background: #f9fafc;
+        font-family: 'Segoe UI', 'Roboto', sans-serif;
+        margin: 0;
+        padding: 0;
+        color: #333;
+      }
+      
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+      
+      /* ===== Container principale ===== */
+      .publication-detail {
+        max-width: 800px;
+        margin: 60px auto;
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        padding: 30px 35px;
+        overflow: hidden;
+        transition: all 0.3s ease-in-out;
+      }
+      
+      .publication-detail:hover {
+        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+      }
+      
+      /* ===== Bouton retour ===== */
+      .back-link {
+        display: inline-block;
+        margin-bottom: 25px;
+        font-weight: 600;
+        color: #1d4ed8;
+        transition: all 0.3s ease;
+      }
+      
+      .back-link:hover {
+        color: #2563eb;
+        text-decoration: underline;
+      }
+      
+      /* ===== Auteur ===== */
+      .auteur {
+        display: flex;
+        align-items: center;
+        margin-bottom: 30px;
+      }
+      
+      .auteur img {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 20px;
+        border: 2px solid #2563eb;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        transition: transform 0.3s ease;
+      }
+      
+      .auteur img:hover {
+        transform: scale(1.05);
+      }
+      
+      .auteur strong {
+        font-size: 1.1rem;
+        color: #111;
+      }
+      
+      .auteur small {
+        color: #777;
+        font-size: 0.9rem;
+      }
+      
+      /* ===== Titre ===== */
+      h2 {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+        color: #111827;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+      
+      /* ===== Contenu ===== */
+      p {
+        line-height: 1.8;
+        color: #4b5563;
+        font-size: 1rem;
+        margin-bottom: 25px;
+      }
+      
+      /* ===== Images ===== */
+      .publication-detail img {
+        width: 100%;
+        max-height: 600px;
+        object-fit: cover;
+        border-radius: 16px;
+        margin: 25px 0;
+        transition: all 0.4s ease;
+        filter: brightness(1.05) contrast(1.1) saturate(1.2);
+      }
+      
+      .publication-detail img:hover {
+        transform: scale(1.03);
+        filter: brightness(1.15) contrast(1.2) saturate(1.3);
+      }
+      
+      /* ===== Vidéos ===== */
+      .publication-detail video {
+        width: 100%;
+        border-radius: 16px;
+        margin: 25px 0;
+        background: #000;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+      }
+      
+      /* ===== Section Commentaires ===== */
+      .comment-section {
+        margin-top: 40px;
+        border-top: 2px solid #e5e7eb;
+        padding-top: 25px;
+      }
+      
+      .comment-section h3 {
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+        color: #111827;
+        font-weight: 600;
+      }
+      
+      .comment {
+        padding: 12px 0;
+        border-bottom: 1px solid #e5e7eb;
+      }
+      
+      .comment strong {
+        color: #2563eb;
+        font-weight: 600;
+      }
+      
+      .comment small {
+        color: #6b7280;
+        font-size: 0.85rem;
+      }
+      
+      .no-result {
+        text-align: center;
+        color: #9ca3af;
+        font-style: italic;
+        padding: 15px 0;
+      }
+      
+      /* ===== Responsive ===== */
+      @media (max-width: 768px) {
+        .publication-detail {
+          margin: 30px 20px;
+          padding: 25px 20px;
+        }
+      
+        .auteur img {
+          width: 55px;
+          height: 55px;
+        }
+      
+        h2 {
+          font-size: 1.5rem;
+        }
+      
+        p {
+          font-size: 0.95rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="publication-detail">
+      <a href="{% url 'eglise:accueil' %}" class="back-link">← Retour</a>
+
+      <div class="auteur">
+        {% if publication.auteur.profile.image %}
+          <img src="{{ publication.auteur.profile.image.url }}" alt="Avatar" />
+        {% else %}
+          <img src="{% static 'eglise/icons/default-profile.png' %}" alt="Avatar par défaut" />
+
+          <img src="{% static 'icons/default-profile.png' %}" alt="Avatar par défaut" />
+        {% endif %}
+        <div>
+          <strong>{{ publication.auteur.username }}</strong><br />
+          <small>{{ publication.date_creation|date:'d M Y à H:i' }}</small>
+        </div>
+      </div>
+
+      <h2>{{ publication.titre }}</h2>
+
+      {% if publication.contenu %}
+        <p>{{ publication.contenu|linebreaks }}</p>
+      {% endif %}
+
+      {% if publication.image %}
+        <img src="{{ publication.image.url }}" alt="Image de la publication" />
+      {% endif %}
+
+      {% if publication.video %}
+        <video controls preload="metadata" poster="{% if publication.image %}{{ publication.image.url }}{% endif %}">
+          <source src="{{ publication.video.url }}" type="video/mp4" />Votre navigateur ne supporte pas la vidéo.
+        </video>
+      {% endif %}
+
+      <div class="comment-section">
+        <h3>Commentaires ({{ commentaires.count }})</h3>
+        {% for com in commentaires %}
+          <div class="comment">
+            <strong>{{ com.auteur.username }}</strong> : {{ com.contenu }}<br />
+            <small>{{ com.date_creation|date:'d M Y H:i' }}</small>
+          </div>
+        {% empty %}
+          <p class="no-result">Aucun commentaire pour cette publication.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </body>
+</html>

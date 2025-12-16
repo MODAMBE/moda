@@ -1,0 +1,5 @@
+<<<<<<< HEAD
+python-3.10.12
+=======
+python-3.11.8
+>>>>>>> 2a352f9 (Premier commit du projet ModApp)

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Publier un texte stylé</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.contenu.label_tag }}<br />
+    {{ form.contenu }}<br /><br />
+
+    {{ form.bg_color.label_tag }} {{ form.bg_color }}<br />
+    {{ form.text_color.label_tag }} {{ form.text_color }}<br />
+    {{ form.font_family.label_tag }} {{ form.font_family }}<br />
+    <!-- stickers: we show catalog and push JSON into hidden input -->
+    <div>
+      <h4>Stickers</h4>
+      <div id="stickers-catalog" style="display:flex; gap:8px;">
+        {% for s in stickers %}
+          <img src="{{ s.image.url }}" data-url="{{ s.image.url }}" style="width:64px;height:64px;cursor:pointer;border:2px solid transparent;" class="sticker-select" />
+        {% endfor %}
+      </div>
+      {{ form.stickers }}
+    </div>
+
+    <br />
+    <button type="submit">Publier</button>
+  </form>
+
+  <script>
+    const selected = []
+    document.querySelectorAll('.sticker-select').forEach((img) => {
+      img.addEventListener('click', () => {
+        img.style.border = img.style.border ? '' : '2px solid #2b7cff'
+        const u = img.dataset.url
+        const idx = selected.indexOf(u)
+        if (idx === -1) selected.push(u)
+        else selected.splice(idx, 1)
+        document.querySelector('input[name="stickers"]').value = JSON.stringify(selected.map((url) => ({ url })))
+      })
+    })
+  </script>
+{% endblock %}

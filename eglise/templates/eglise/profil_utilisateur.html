@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% block content %}
+  <style>
+    .profil-page {
+      display: flex;
+      gap: 20px;
+      margin: 20px;
+    }
+    
+    /* ===== COLONNE DE GAUCHE ===== */
+    .profil-sidebar {
+      flex: 1;
+      max-width: 280px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    
+      /* ✅ Ajout pour laisser respirer au-dessus de la barre d’outils */
+      margin-bottom: 80px;
+    }
+    .profil-sidebar img.avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+    .profil-sidebar h2 {
+      margin: 10px 0;
+    }
+    .profil-sidebar button {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background: #007bff;
+      color: #fff;
+      width: 100%;
+    
+      /* ✅ petit effet d’élévation */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.15s ease;
+    }
+    .profil-sidebar button:hover {
+      transform: translateY(-2px);
+    }
+    .profil-sidebar button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    /* ===== COLONNE DES PUBLICATIONS ===== */
+    .profil-content {
+      flex: 3;
+      margin-bottom: 80px; /* ✅ Pour que le bas ne colle pas non plus */
+    }
+    .publication-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .publication-card p {
+      margin: 5px 0;
+    }
+    .publication-card img,
+    .publication-card video {
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 10px;
+      max-height: 450px;
+      object-fit: cover;
+    }
+    
+    .actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+    .actions button,
+    .actions a {
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 15px;
+      text-decoration: none;
+      color: #007bff;
+    }
+  </style>
+
+  <div class="profil-page">
+    <!-- COLONNE GAUCHE : INFOS UTILISATEUR -->
+    <div class="profil-sidebar">
+      <img src="{{ utilisateur.profile.image.url|default:'/static/img/default-avatar.png' }}" class="avatar" alt="avatar" />
+      <h2>{{ utilisateur.username }}</h2>
+
+      {# 🔹 Bouton Ami #}
+      {% if request.user != utilisateur %}
+        {% if est_ami %}
+          <button disabled>✅ Déjà ami(e)</button>
+        {% else %}
+          <form method="post" action="{% url 'eglise:ajouter_ami' utilisateur.id %}">
+            {% csrf_token %}
+            <button type="submit">➕ Ajouter comme ami(e)</button>
+          </form>
+        {% endif %}
+      {% endif %}
+
+      {# 🔹 Bouton Abonnement à la chaîne #}
+      {% if chaine %}
+        {% if est_abonne %}
+          <form method="post" action="{% url 'eglise:desabonner' chaine.id %}">
+            {% csrf_token %}
+            <button type="submit">🚫 Se désabonner</button>
+          </form>
+        {% else %}
+          <form method="post" action="{% url 'eglise:sabonner' chaine.id %}">
+            {% csrf_token %}
+            <button type="submit">🔔 S’abonner à sa chaîne</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <!-- COLONNE DROITE : PUBLICATIONS -->
+    <div class="profil-content">
+      <h3>Ses publications</h3>
+      {% for pub in publications %}
+        <div class="publication-card">
+          {% if pub.contenu %}
+            <p>{{ pub.contenu }}</p>
+          {% endif %}
+
+          {% for media in pub.medias.all %}
+            {% if media.type == 'image' %}
+              <img src="{{ media.fichier.url }}" />
+            {% elif media.type == 'video' %}
+              <video controls>
+                <source src="{{ media.fichier.url }}" type="video/mp4" />
+              </video>
+            {% elif media.type == 'document' %}
+              <a href="{{ media.fichier.url }}" target="_blank">📄 Voir document</a>
+            {% endif %}
+          {% endfor %}
+
+          <div class="actions">
+            <button>❤️ {{ pub.likes.count }}</button>
+            <a href="{% url 'eglise:details_publication' pub.id %}">💬 {{ pub.commentaires.count }} Commentaires</a>
+            <button>🔗 Partager</button>
+          </div>
+        </div>
+      {% empty %}
+        <p>Aucune publication pour cet utilisateur.</p>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

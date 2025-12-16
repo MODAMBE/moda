@@ -1,0 +1,25 @@
+{% for pub in publications %}
+  <div class="video-card">
+    <div class="meta">
+      <img src="{{ pub.chaine.avatar.url }}" alt="" />
+      <div>
+        <b>{{ pub.chaine.nom }}</b><br />
+        <small>{{ pub.date_pub|date:'d/m/Y H:i' }}</small>
+      </div>
+    </div>
+
+    {% if pub.texte %}
+      <p>{{ pub.texte }}</p>
+    {% endif %}
+
+    {% for media in pub.medias.all %}
+      {% if media.type == 'video' %}
+        <video controls>
+          <source src="{{ media.fichier.url }}" type="video/mp4" />
+        </video>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% empty %}
+  <p style="color:white; text-align:center;">Aucune vidéo pour le moment.</p>
+{% endfor %}

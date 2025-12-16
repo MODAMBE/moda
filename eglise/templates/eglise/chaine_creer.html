@@ -1,0 +1,767 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+  <style>
+    /* ---------- TOOLBAR ---------- */
+    .toolbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 65px;
+      background: #744ca2ee;
+      backdrop-filter: blur(10px);
+      border-top: 1px solid #dcdcdc;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 999;
+    }
+    .tool-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 12px;
+      text-decoration: none;
+      padding: 4px;
+      color: #e7e1e1ff;
+      font-weight: 500;
+    }
+    .tool-btn img {
+      width: 30px;
+      height: 30px;
+      margin-bottom: 3px;
+    }
+    .tool-btn.disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+    .tool-btn.red img {
+      filter: hue-rotate(-40deg) saturate(1.4);
+    }
+    
+    /* ---------- AVATAR ---------- */
+    .top-right-user {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #312b56dd;
+      padding: 8px 12px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      z-index: 2000;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    .top-right-user img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid white;
+    }
+    .top-right-user span {
+      color: #fff;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    /* ---------- POPUP ---------- */
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(246, 241, 241, 0.45);
+      backdrop-filter: blur(6px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      animation: fadeIn 0.2s ease;
+    }
+    .popup-overlay.open {
+      display: flex;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    
+    .popup {
+      background: #312b56ee;
+      backdrop-filter: blur(20px);
+      padding: 25px;
+      width: 92%;
+      max-width: 1100px;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      animation: popupShow 0.25s ease;
+      color: #f2eef2;
+      box-sizing: border-box;
+    }
+    @keyframes popupShow {
+      from {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    .popup h3 {
+      text-align: center;
+      margin-bottom: 12px;
+      font-size: 24px;
+      font-weight: 600;
+      color: #f5f1f1;
+    }
+    
+    /* ---------- INPUTS ---------- */
+    .form-field {
+      width: 100%;
+      padding: 12px;
+      margin: 7px 0 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 15px;
+      background: #fafafa;
+      box-sizing: border-box;
+      color: #222;
+    }
+    .form-field:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 6px rgba(0, 123, 255, 0.25);
+      outline: none;
+      background: #fff;
+    }
+    
+    /* ---------- BUTTONS ---------- */
+    .btn-submit {
+      background: #007bff;
+      color: #fff;
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 10px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-submit:hover {
+      background: #0069d9;
+      transform: translateY(-2px);
+    }
+    .btn-close {
+      margin-top: 10px;
+      background: #666;
+      width: 100%;
+      padding: 11px;
+      border-radius: 10px;
+      color: #fff;
+      border: none;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .btn-close:hover {
+      background: #555;
+    }
+    
+    /* ---------- PREVIEW LAYOUT ---------- */
+    .video-preview-container {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      margin-top: 12px;
+      width: 100%;
+      box-sizing: border-box;
+      flex-wrap: nowrap;
+    }
+    
+    /* Main preview (left) */
+    .main-preview {
+      flex: 1 1 60%;
+      min-width: 280px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #video-preview {
+      width: 100%;
+      height: auto;
+      max-height: 520px;
+      border-radius: 12px;
+      background: #000;
+      display: none;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+    }
+    .preview-meta {
+      color: #eaeaea;
+      font-size: 0.95rem;
+    }
+    
+    /* Thumbnails list (right) */
+    .thumbs-list {
+      width: 260px;
+      max-height: 520px;
+      overflow-y: auto;
+      padding: 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      box-sizing: border-box;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .thumb-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 8px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: background 0.12s ease, transform 0.08s ease;
+      background: transparent;
+    }
+    .thumb-item:hover {
+      background: rgba(255, 255, 255, 0.03);
+      transform: translateY(-2px);
+    }
+    .thumb-item.selected {
+      background: rgba(0, 123, 255, 0.12);
+      border: 1px solid rgba(0, 123, 255, 0.22);
+    }
+    .thumb-item video {
+      width: 110px;
+      height: 62px;
+      object-fit: cover;
+      border-radius: 6px;
+      background: #000;
+      flex-shrink: 0;
+    }
+    .thumb-meta {
+      color: #e6e1e1;
+      font-size: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      overflow: hidden;
+    }
+    .thumb-meta .name {
+      font-weight: 600;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      max-width: 130px;
+    }
+    .thumb-meta .size {
+      opacity: 0.85;
+      font-size: 0.82rem;
+    }
+    
+    /* warning message */
+    .file-error {
+      color: #ffdddd;
+      background: #5a1f1f66;
+      padding: 8px;
+      border-radius: 8px;
+      display: none;
+      margin-top: 8px;
+    }
+    
+    body.popup-open {
+      overflow: hidden;
+    }
+    
+    /* Small screens: stack vertically and make thumbnails horizontal scroll under main preview */
+    @media (max-width: 880px) {
+      .popup {
+        max-width: 96%;
+        padding: 18px;
+      }
+      .video-preview-container {
+        flex-direction: column;
+      }
+      .thumbs-list {
+        width: 100%;
+        max-height: 140px;
+        display: flex;
+        overflow-x: auto;
+        overflow-y: hidden;
+        gap: 8px;
+        padding: 6px;
+      }
+      .thumb-item {
+        flex: 0 0 auto;
+        width: 180px;
+      }
+      .thumb-item video {
+        width: 100%;
+        height: 90px;
+      }
+      .main-preview {
+        order: 0;
+      }
+    }
+    /* ----- SCROLLBAR UNIQUEMENT POUR LA POPUP PUBLIER ----- */
+    #popup-upload-video .thumbs-list::-webkit-scrollbar {
+      width: 14px;
+    }
+    
+    #popup-upload-video .thumbs-list::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+    }
+    
+    #popup-upload-video .thumbs-list::-webkit-scrollbar-thumb {
+      background: #6b4cd4;
+      border-radius: 10px;
+      border: 3px solid rgba(20, 18, 43, 0.9);
+    }
+    
+    #popup-upload-video .thumbs-list::-webkit-scrollbar-thumb:hover {
+      background: #8c6cff;
+    }
+    
+    @media (max-width: 420px) {
+      .thumb-item {
+        width: 150px;
+      }
+      .thumb-item video {
+        height: 84px;
+      }
+      .popup h3 {
+        font-size: 20px;
+      }
+    }
+  </style>
+
+  {% if user.is_authenticated and user_chaine %}
+    <div class="alert alert-success" style="text-align:center; margin-top:10px;">
+      ✔ Votre chaîne est créée : <b>{{ user_chaine.nom }}</b>
+    </div>
+    <div class="top-right-user" aria-hidden="false">
+      {% if user_chaine.avatar %}
+        <img src="{{ user_chaine.avatar.url }}" alt="avatar" />
+      {% else %}
+        <img src="{% static 'eglise/icons/default_avatar.png' %}" alt="avatar" />
+
+        <img src="{% static 'icons/default_avatar.png' %}" alt="avatar" />
+      {% endif %}
+      <span>{{ user_chaine.nom }}</span>
+    </div>
+  {% else %}
+    <div class="alert alert-warning" style="text-align:center; margin-top:10px;">⚠ Vous n’avez pas encore créé de chaîne.</div>
+  {% endif %}
+
+  <!-- POPUP - CREER CHAINE -->
+  <div id="popup-creer-chaine" class="popup-overlay" aria-hidden="true" data-popup="creer">
+    <div class="popup" role="dialog" aria-modal="true" aria-labelledby="creerTitle">
+      <h3 id="creerTitle">Créer une chaîne</h3>
+      <form method="POST" action="{% url 'eglise:chaine_creer' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label>Nom :</label>
+        <input type="text" name="nom" class="form-field" required />
+
+        <label>Avatar (optionnel) :</label>
+        <input type="file" name="avatar" accept="image/*" class="form-field" />
+
+        <button type="submit" class="btn-submit">Créer</button>
+        <button type="button" class="btn-close" data-close="popup-creer-chaine">Fermer</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- POPUP - PUBLIER VIDEO -->
+  <div id="popup-upload-video" class="popup-overlay" aria-hidden="true" data-popup="publier">
+    <div class="popup" role="dialog" aria-modal="true" aria-labelledby="publierTitle">
+      <h3 id="publierTitle">Publier une vidéo</h3>
+
+      <form id="form-upload-video"
+        method="POST"
+        action="{% if user_chaine %}
+          {% url 'eglise:upload_video' user_chaine.username|slugify %}
+        {% else %}
+
+        {% endif %}"
+        enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <label for="titre">Titre :</label>
+        <input type="text" id="titre" name="titre" class="form-field" required />
+
+        <label for="prix">Prix (FXC) :</label>
+        <input type="number" id="prix" name="prix" class="form-field" step="0.01" min="0" placeholder="0.00" required />
+
+        <label for="video">Choisir une ou plusieurs vidéos (MP4, WEBM...) :</label>
+        <!-- allow multiple selection; Django -> request.FILES.getlist('video') -->
+        <input id="input-video" type="file" name="video" accept="video/*" class="form-field" multiple required />
+
+        <div class="file-error" id="file-error" role="alert"></div>
+
+        <div class="video-preview-wrap" id="preview-wrap" aria-live="polite">
+          <div class="video-preview-container" id="video-preview-container">
+            <div class="main-preview">
+              <video id="video-preview" controls playsinline></video>
+              <div class="preview-meta" id="preview-meta" style="display:none;"></div>
+            </div>
+
+            <div class="thumbs-list" id="thumbs-list" aria-label="Liste de vidéos sélectionnées" tabindex="0">
+              <!-- thumb items will be injected here; vertical scroll when many -->
+            </div>
+          </div>
+        </div>
+
+        <label for="description">Description :</label>
+        <textarea id="description" name="description" class="form-field" rows="4"></textarea>
+
+        <button type="submit" class="btn-submit" id="submit-btn">Publier</button>
+        <button type="button" class="btn-close" data-close="popup-upload-video">Fermer</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar" role="navigation" aria-label="toolbar">
+    {% if not user.is_authenticated or not user_chaine %}
+      <a href="#" id="btn-creer-chaine" class="tool-btn" data-open="popup-creer-chaine"><img src="{% static 'eglise/icons/plus_chaines.png' %}" alt="" /><span>Créer</span></a>
+    {% else %}
+      <span class="tool-btn disabled"><img src="{% static 'eglise/icons/plus_chaines.png' %}" alt="" /><span>Créer</span></span>
+    {% endif %}
+
+    {% if user.is_authenticated and user_chaine %}
+      <a href="#" id="btn-publier" class="tool-btn" data-open="popup-upload-video"><img src="{% static 'eglise/icons/publicite.png' %}" alt="" /><span>Publier</span></a>
+      <a href="{% url 'eglise:modifier_chaine' user_chaine.username %}" class="tool-btn"><img src="{% static 'eglise/icons/modifier.png' %}" alt="" /><span>Modifier</span></a>
+      <a href="#" id="btn-supprimer" class="tool-btn red" data-url="{% url 'eglise:supprimer_chaine' user_chaine.id %}"><img src="{% static 'eglise/icons/delete.png' %}" alt="" /><span>Supprimer</span></a>
+    {% else %}
+      <span class="tool-btn disabled"><img src="{% static 'eglise/icons/publicite.png' %}" alt="" /><span>Publier</span></span>
+      <span class="tool-btn disabled"><img src="{% static 'eglise/icons/modifier.png' %}" alt="" /><span>Modifier</span></span>
+      <span class="tool-btn disabled"><img src="{% static 'eglise/icons/delete.png' %}" alt="" /><span>Supprimer</span></span>
+
+      <a href="#" id="btn-creer-chaine" class="tool-btn" data-open="popup-creer-chaine"><img src="{% static 'icons/plus_chaines.png' %}" alt="" /><span>Créer</span></a>
+      {% else %}
+      <span class="tool-btn disabled"><img src="{% static 'icons/plus_chaines.png' %}" alt="" /><span>Créer</span></span>
+    {% endif %}
+
+    {% if user.is_authenticated and user_chaine %}
+      <a href="#" id="btn-publier" class="tool-btn" data-open="popup-upload-video"><img src="{% static 'icons/publicite.png' %}" alt="" /><span>Publier</span></a>
+      <a href="{% url 'eglise:modifier_chaine' user_chaine.username %}" class="tool-btn"><img src="{% static 'icons/modifier.png' %}" alt="" /><span>Modifier</span></a>
+      <a href="#" id="btn-supprimer" class="tool-btn red" data-url="{% url 'eglise:supprimer_chaine' user_chaine.id %}"><img src="{% static 'icons/delete.png' %}" alt="" /><span>Supprimer</span></a>
+    {% else %}
+      <span class="tool-btn disabled"><img src="{% static 'icons/publicite.png' %}" alt="" /><span>Publier</span></span>
+      <span class="tool-btn disabled"><img src="{% static 'icons/modifier.png' %}" alt="" /><span>Modifier</span></span>
+      <span class="tool-btn disabled"><img src="{% static 'icons/delete.png' %}" alt="" /><span>Supprimer</span></span>
+    {% endif %}
+  </div>
+
+  <form id="form-supprimer" method="POST" style="display:none;">
+    {% csrf_token %}
+  </form>
+
+  {{ block.super }}
+
+  <script>
+
+  document.addEventListener('DOMContentLoaded', function () {
+
+    document.addEventListener('DOMContentLoaded'), function () {
+
+      // Popup helpers
+      function openPopup(id) {
+        const pop = document.getElementById(id)
+        if (!pop) return
+        pop.classList.add('open')
+        pop.setAttribute('aria-hidden', 'false')
+        document.body.classList.add('popup-open')
+        // focus first focusable element for accessibility
+        const first = pop.querySelector('input, button, textarea, [tabindex]:not([tabindex="-1"])')
+        if (first) first.focus()
+      }
+      function closePopup(id) {
+        const pop = document.getElementById(id)
+        if (!pop) return
+        pop.classList.remove('open')
+        pop.setAttribute('aria-hidden', 'true')
+        // Remove body class only if no popup open
+        if (!document.querySelectorAll('.popup-overlay.open').length) {
+          document.body.classList.remove('popup-open')
+        }
+      }
+    
+      // open buttons
+      document.querySelectorAll('[data-open]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault()
+          const id = btn.getAttribute('data-open')
+          openPopup(id)
+        })
+      })
+    
+      // close buttons (data-close on button)
+      document.querySelectorAll('[data-close]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.preventDefault()
+          const id = btn.getAttribute('data-close')
+          closePopup(id)
+        })
+      })
+    
+      // close by clicking overlay
+      document.querySelectorAll('.popup-overlay').forEach(function (overlay) {
+        overlay.addEventListener('click', function (e) {
+          if (e.target === overlay) {
+            overlay.classList.remove('open')
+            overlay.setAttribute('aria-hidden', 'true')
+            if (!document.querySelectorAll('.popup-overlay.open').length) document.body.classList.remove('popup-open')
+          }
+        })
+      })
+    
+      // close on Esc
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.popup-overlay.open').forEach(function (p) {
+            p.classList.remove('open')
+            p.setAttribute('aria-hidden', 'true')
+          })
+          document.body.classList.remove('popup-open')
+        }
+      })
+    
+      // supprimer chaine
+      const btnSup = document.getElementById('btn-supprimer')
+      const formSup = document.getElementById('form-supprimer')
+      if (btnSup) {
+        btnSup.addEventListener('click', function (e) {
+          e.preventDefault()
+          if (confirm('Voulez-vous vraiment supprimer votre chaîne ?')) {
+            formSup.action = btnSup.dataset.url
+            formSup.submit()
+          }
+        })
+      }
+    
+      // Legacy fallback if elements without data-open exist
+      const legacyBtnPublier = document.getElementById('btn-publier')
+      if (legacyBtnPublier && !legacyBtnPublier.hasAttribute('data-open')) {
+        legacyBtnPublier.addEventListener('click', function (e) {
+          e.preventDefault()
+          openPopup('popup-upload-video')
+        })
+      }
+    
+      // ---------------------------
+      // Video preview + validation (multiple files + vertical scroll list)
+      // ---------------------------
+      const inputVideo = document.getElementById('input-video')
+      const videoPreview = document.getElementById('video-preview')
+      const previewMeta = document.getElementById('preview-meta')
+      const fileError = document.getElementById('file-error')
+      const formUpload = document.getElementById('form-upload-video')
+      const submitBtn = document.getElementById('submit-btn')
+      const thumbsList = document.getElementById('thumbs-list')
+      const MAX_BYTES = 500 * 1024 * 1024 // 500 MB per file limit (adjustable)
+      let currentPreviews = [] // {file, url, el}
+    
+      function clearPreviews() {
+        // revoke object URLs
+        currentPreviews.forEach(function (p) {
+          try {
+            URL.revokeObjectURL(p.url)
+          } catch (e) {}
+        })
+        currentPreviews = []
+        thumbsList.innerHTML = ''
+        if (videoPreview) {
+          videoPreview.pause()
+          videoPreview.removeAttribute('src')
+          videoPreview.style.display = 'none'
+        }
+        previewMeta.style.display = 'none'
+        fileError.style.display = 'none'
+        fileError.textContent = ''
+      }
+    
+      function humanFileSize(bytes) {
+        if (bytes === 0) return '0 B'
+        const k = 1024
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+        const i = Math.floor(Math.log(bytes) / Math.log(k))
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+      }
+    
+      function makeThumbItem(file, url, index) {
+        const item = document.createElement('div')
+        item.className = 'thumb-item'
+        item.setAttribute('role', 'button')
+        item.setAttribute('tabindex', '0')
+        item.dataset.index = index
+    
+        const vid = document.createElement('video')
+        vid.src = url
+        vid.muted = true
+        vid.playsInline = true
+        vid.preload = 'metadata'
+        vid.setAttribute('aria-hidden', 'true')
+        // small preview will remain paused; can show first frame
+        vid.addEventListener('loadeddata', function () {
+          try {
+            vid.currentTime = 0.05
+          } catch (e) {}
+        })
+    
+        const meta = document.createElement('div')
+        meta.className = 'thumb-meta'
+        const name = document.createElement('div')
+        name.className = 'name'
+        name.textContent = file.name
+        const size = document.createElement('div')
+        size.className = 'size'
+        size.textContent = humanFileSize(file.size)
+        meta.appendChild(name)
+        meta.appendChild(size)
+    
+        item.appendChild(vid)
+        item.appendChild(meta)
+    
+        // click or keyboard selects this video as main preview
+        function selectHandler(e) {
+          e.preventDefault()
+          // mark selected
+          thumbsList.querySelectorAll('.thumb-item').forEach(function (it) {
+            it.classList.remove('selected')
+          })
+          item.classList.add('selected')
+          // set main preview
+          if (videoPreview) {
+            videoPreview.src = url
+            videoPreview.style.display = 'block'
+            videoPreview.load()
+            // display meta
+            previewMeta.style.display = 'block'
+            previewMeta.textContent = `Nom: ${file.name} — Taille: ${humanFileSize(file.size)}`
+            // attempt to play (will only autoplay if allowed)
+            try {
+              videoPreview.play().catch(() => {})
+            } catch (err) {}
+          }
+        }
+        item.addEventListener('click', selectHandler)
+        item.addEventListener('keydown', function (ev) {
+          if (ev.key === 'Enter' || ev.key === ' ') selectHandler(ev)
+        })
+    
+        return item
+      }
+    
+      if (inputVideo) {
+        inputVideo.addEventListener('change', function (e) {
+          clearPreviews()
+          const files = Array.from(e.target.files || [])
+          if (!files.length) return
+    
+          if (inputVideo) {
+            inputVideo.addEventListener('change', function (e) {
+              clearPreviews()
+              const files = Array.from(e.target.files || [])
+              if (!files.length) return
+
+          // Validate each file and create previews
+          let anyInvalid = false
+          files.forEach(function (file, i) {
+            if (!file.type || !file.type.startsWith('video/')) {
+              anyInvalid = true
+              return
+            }
+            if (file.size > MAX_BYTES) {
+              anyInvalid = true
+              return
+            }
+            const url = URL.createObjectURL(file)
+            currentPreviews.push({ file: file, url: url })
+            const thumb = makeThumbItem(file, url, currentPreviews.length - 1)
+            thumbsList.appendChild(thumb)
+          })
+    
+          if (anyInvalid) {
+            // if any invalid, show error and clear invalids from selection
+            fileError.style.display = 'block'
+            fileError.textContent = 'Un ou plusieurs fichiers sélectionnés ne sont pas valides (type ou taille). Veuillez vérifier.'
+            // Do not auto-submit; let user fix selection
+            return
+          } else {
+            fileError.style.display = 'none'
+            fileError.textContent = ''
+          }
+    
+          // select first preview by default
+          if (currentPreviews.length) {
+            const first = thumbsList.querySelector('.thumb-item')
+            if (first) first.click()
+          }
+        })
+      }
+    
+      // prevent submit if no valid video selected
+      if (formUpload) {
+        formUpload.addEventListener('submit', function (e) {
+          fileError.style.display = 'none'
+          const files = inputVideo && inputVideo.files && inputVideo.files.length ? Array.from(inputVideo.files) : []
+          if (!files.length) {
+            e.preventDefault()
+            fileError.style.display = 'block'
+            fileError.textContent = 'Veuillez choisir au moins une vidéo avant de publier.'
+            return
+          }
+          // validate once more before submit
+          for (let i = 0; i < files.length; i++) {
+            const f = files[i]
+            if (!f.type || !f.type.startsWith('video/')) {
+              e.preventDefault()
+              fileError.style.display = 'block'
+              fileError.textContent = "Le fichier sélectionné n'est pas une vidéo valide."
+              return
+            }
+            if (f.size > MAX_BYTES) {
+              e.preventDefault()
+              fileError.style.display = 'block'
+              fileError.textContent = 'Un des fichiers est trop volumineux (max 500 MB).'
+              return
+            }
+          }
+          // optionally disable submit to avoid double-post
+          submitBtn.disabled = true
+          submitBtn.textContent = 'Publication en cours...'
+        })
+      }
+    
+      // When popup closes, clear previews to free memory
+      document.querySelectorAll('[data-close]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          clearPreviews()
+          // also clear input value to allow re-selection of same files later
+          if (inputVideo) inputVideo.value = ''
+        })
+      })
+      // also when clicking overlay to close
+      document.querySelectorAll('.popup-overlay').forEach(function (overlay) {
+        overlay.addEventListener('click', function (e) {
+          if (e.target === overlay) {
+            if (overlay.id === 'popup-upload-video') {
+              clearPreviews()
+              if (inputVideo) inputVideo.value = ''
+            }
+          }
+        })
+      })
+    
+      // initial reset
+      clearPreviews()
+    }) // nested DOMContentLoaded
+}) // main DOMContentLoaded
+</script>
+{% endblock %}

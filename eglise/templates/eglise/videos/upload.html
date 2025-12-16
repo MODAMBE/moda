@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #111827;
+      margin: 0;
+      padding: 0;
+      color: #f3f4f6;
+    }
+    
+    .upload-box {
+      width: 90%;
+      max-width: 600px;
+      margin: 20px auto;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 25px;
+      border-radius: 15px;
+    }
+    
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    
+    input[type='text'],
+    input[type='file'] {
+      width: 100%;
+      margin-top: 8px;
+      padding: 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    
+    .btn {
+      margin-top: 20px;
+      padding: 12px;
+      background: #0b84ff;
+      border-radius: 10px;
+      color: #fff;
+      width: 100%;
+      font-weight: bold;
+    }
+    
+    #preview video {
+      width: 100%;
+      margin-top: 15px;
+      border-radius: 10px;
+    }
+  </style>
+
+  <div class="upload-box">
+    <h2>Publier une vidéo</h2>
+
+    {% for message in messages %}
+      <p style="color:red;">{{ message }}</p>
+    {% endfor %}
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <label>Titre :</label>
+      <input type="text" name="titre" required />
+
+      <label>Choisissez une vidéo :</label>
+      <input type="file" name="video" id="video-input" accept="video/*" required />
+
+      <div id="preview"></div>
+
+      <button type="submit" class="btn">🚀 Publier</button>
+    </form>
+  </div>
+
+  <script>
+    const inputVideo = document.getElementById('video-input')
+    const preview = document.getElementById('preview')
+    
+    inputVideo.addEventListener('change', () => {
+      preview.innerHTML = ''
+      const file = inputVideo.files[0]
+      if (!file) return
+    
+      const video = document.createElement('video')
+      video.src = URL.createObjectURL(file)
+      video.controls = true
+    
+      preview.appendChild(video)
+    })
+  </script>
+{% endblock %}
+{% for message in messages %}
+  <p style="color:lightgreen;">{{ message }}</p>
+{% endfor %}
+
+<form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <label>Titre :</label>
+  <input type="text" name="titre" required />
+
+  <label>Choisissez une vidéo :</label>
+  <input type="file" name="video" id="video-input" accept="video/*" required />
+
+  <div id="preview"></div>
+
+  <button type="submit" class="btn">🚀 Publier</button>
+</form>

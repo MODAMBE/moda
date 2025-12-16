@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <div class="container" style="max-width:600px; margin-top:20px;">
+    <h2 style="text-align:center;">Modifier ma chaîne</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <label>Nom :</label>
+      <input type="text" name="nom" class="form-control" value="{{ chaine.nom }}" required />
+
+      <label>Biographie :</label>
+      <textarea name="bio" class="form-control">{{ chaine.bio }}</textarea>
+
+      <label>Avatar :</label>
+      <input type="file" name="avatar" class="form-control" accept="image/*" />
+
+      <label>Bannière :</label>
+      <input type="file" name="banner" class="form-control" accept="image/*" />
+
+      <button type="submit" class="btn btn-primary" style="margin-top:10px;width:100%;">Enregistrer</button>
+    </form>
+  </div>
+{% endblock %}

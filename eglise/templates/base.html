@@ -1,0 +1,170 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- iOS : Autoriser l'installation sur écran d'accueil -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Manifest PWA -->
+
+    <link rel="manifest" href="{% static 'eglise/manifest/manifest.json' %}" />
+    <meta name="theme-color" content="#0a0a0a" />
+
+    <!-- Icônes Android + PWA -->
+    <link rel="icon" sizes="192x192" href="{% static 'eglise/manifest/modapp1.png' %}" />
+    <link rel="icon" sizes="512x512" href="{% static 'eglise/manifest/modapp2.png' %}" />
+
+    <!-- Icônes iPhone / iPad -->
+    <link rel="apple-touch-icon" sizes="192x192" href="{% static 'eglise/manifest/modapp1.png' %}" />
+    <link rel="apple-touch-icon" sizes="512x512" href="{% static 'eglise/manifest/modapp2.png' %}" />
+
+    <link rel="manifest" href="{% static 'manifest/manifest.json' %}" />
+    <meta name="theme-color" content="#0a0a0a" />
+
+    <!-- Icônes Android + PWA -->
+    <link rel="icon" sizes="192x192" href="{% static 'manifest/modapp1.png' %}" />
+    <link rel="icon" sizes="512x512" href="{% static 'manifest/modapp2.png' %}" />
+
+    <!-- Icônes iPhone / iPad -->
+    <link rel="apple-touch-icon" sizes="192x192" href="{% static 'manifest/modapp1.png' %}" />
+    <link rel="apple-touch-icon" sizes="512x512" href="{% static 'manifest/modapp2.png' %}" />
+
+    <title>
+      {% block title %}
+        AppMOEG
+      {% endblock %}
+    </title>
+
+    <!-- CSS & JS -->
+
+    <link rel="stylesheet" href="{% static 'eglise/css/style.css' %}" />
+    <script src="{% static 'eglise/js/script.js' %}" defer></script>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <script src="{% static 'js/script.js' %}" defer></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+
+    <!-- Style WhatsApp-like -->
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background-color: #f4f6f8;
+      }
+      
+      .whatsapp-header {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        background-color: #075e54;
+        color: white;
+        padding: 10px 15px;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+      
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      
+      .avatar-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .user-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      }
+      
+      .user-name {
+        font-size: 18px;
+        font-weight: 600;
+      }
+      
+      .user-name a {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+      }
+      
+      main {
+        padding: 15px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- HEADER STYLE WHATSAPP -->
+    <header class="whatsapp-header">
+      <div class="user-info">
+        {% if user.is_authenticated %}
+          <div class="avatar-container">
+            {% if user.profile.image %}
+              <img src="{{ user.profile.image.url }}" alt="Profil" class="user-avatar" />
+            {% else %}
+              <img src="{% static 'eglise/icons/default-profile.png' %}" alt="Profil" class="user-avatar" />
+
+              <img src="{% static 'icons/default-profile.png' %}" alt="Profil" class="user-avatar" />
+            {% endif %}
+          </div>
+          <div class="user-name">{{ user.username }}</div>
+        {% else %}
+          <div class="user-name">
+            <a href="{% url 'eglise:connexion' %}">Se connecter</a>
+          </div>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- TOOLBAR OPTIONNELLE -->
+    {% block toolbar %}
+
+    {% endblock %}
+
+    <!-- CONTENU PRINCIPAL -->
+    <main>
+      {% block content %}
+
+      {% endblock %}
+    </main>
+  </body>
+</html>
+
+<!-- ========================================= -->
+<!-- 🔥 SERVICE WORKER (une seule version propre) -->
+<!-- ========================================= -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register("{% static 'eglise/sw.js' %}")
+    })
+  }
+</script>
+<!-- Google AdSense -->
+<script data-ad-client="{{ ADSENSE_CLIENT_ID }}" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+
+<!-- Google AdMob (Mobile Apps) -->
+<script>
+  var admobAppId = '{{ ADMOB_APP_ID }}'
+</script>
+
+<!-- Meta Audience Network -->
+<div class="ad-placement" data-placement-id="{{ META_AUDIENCE_PLACEMENT_ID }}"></div>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pubs sponsorisées</title>
+    <style>
+      body {
+        font-family: Arial;
+        background: #f5f5f5;
+        padding: 20px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 20px;
+      }
+      .card {
+        background: white;
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+      img {
+        width: 100%;
+        border-radius: 8px;
+      }
+      .name {
+        font-weight: bold;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Pubs sponsorisées</h2>
+
+    <div class="grid">
+      {% for p in pubs %}
+        <div class="card">
+          <img src="{{ p.image.url }}" alt="Pub" />
+          <div class="name">{{ p.annonceur }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </body>
+</html>

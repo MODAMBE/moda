@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+  <h2>Supprimer la chaîne {{ chaine.nom }}</h2>
+  <p>Confirmez-vous la suppression ? Cette action est définitive.</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Oui, supprimer</button>
+    <a href="{% url 'eglise:detail_chaine' chaine.username %}">Annuler</a>
+  </form>
+{% endblock %}

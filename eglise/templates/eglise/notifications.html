@@ -1,0 +1,177 @@
+{% extends 'eglise/base.html' %}
+
+{% block content %}
+  <style>
+    /* ===== Reset & Base ===== */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f3f5f8;
+      color: #333;
+    }
+    
+    /* ===== CONTAINER PRINCIPAL ===== */
+    .notifications-container {
+      width: 100%;
+      max-width: 750px;
+      margin: 20px auto;
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 40px);
+      transition: all 0.3s ease-in-out;
+    }
+    
+    .notifications-container:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+    }
+    
+    /* ===== HEADER ===== */
+    .notifications-header {
+      background: linear-gradient(135deg, #128c7e, #25d366);
+      color: #fff;
+      padding: 18px 25px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      text-align: center;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .notification-unread {
+      color: #ff3b30;
+      font-weight: bold;
+      margin-left: 8px;
+      font-size: 0.95rem;
+    }
+    
+    /* ===== LISTE DES NOTIFICATIONS ===== */
+    .notifications-list {
+      flex: 1;
+      overflow-y: auto;
+      background: #f9fafc;
+      padding: 10px 0;
+    }
+    
+    .notification-item {
+      display: flex;
+      flex-direction: column;
+      padding: 15px 20px;
+      margin: 5px 15px;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      transition: all 0.25s ease;
+    }
+    
+    .notification-item:hover {
+      background: #e5f7f0;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .notification-item strong {
+      display: inline-block;
+      width: 100px;
+      color: #128c7e;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .notification-item small {
+      color: #6b7280;
+      font-size: 0.85rem;
+      margin-top: 3px;
+    }
+    
+    /* Message non lu */
+    .notification-item .notification-unread {
+      align-self: flex-end;
+      margin-top: 5px;
+      font-size: 1rem;
+    }
+    
+    /* Aucune notification */
+    .no-notifications {
+      padding: 25px;
+      text-align: center;
+      color: #9ca3af;
+      font-style: italic;
+      font-size: 0.95rem;
+    }
+    
+    /* ===== SCROLLBAR PERSONNALISÉE ===== */
+    .notifications-list::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .notifications-list::-webkit-scrollbar-track {
+      background: #f3f3f3;
+      border-radius: 8px;
+    }
+    
+    .notifications-list::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 8px;
+    }
+    
+    .notifications-list::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+    
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 600px) {
+      .notifications-container {
+        border-radius: 0;
+        height: 100vh;
+        margin: 0;
+      }
+    
+      .notification-item strong {
+        width: 70px;
+      }
+    
+      .notifications-header {
+        font-size: 1.1rem;
+        padding: 15px 20px;
+      }
+    }
+  </style>
+
+  <div class="notifications-container">
+    <div class="notifications-header">
+      🔔 Notifications{% if user.is_authenticated and non_lues and non_lues.count %}
+        <span class="notification-unread">({{ non_lues.count }})</span>
+      {% endif %}
+    </div>
+
+    <div class="notifications-list">
+      {% if notifications %}
+        {% for notif in notifications %}
+          <div class="notification-item">
+            <strong>[{{ notif.get_type_display }}]</strong>
+            {{ notif.message }}
+            <small>- {{ notif.date|date:'d/m/Y H:i' }}</small>
+            {% if not notif.lu %}
+              <span class="notification-unread">●</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="no-notifications">Aucune notification pour le moment.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

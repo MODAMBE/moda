@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Paiement réussi</title>
+    <style>
+      body {
+        font-family: Arial;
+        background: #eaffea;
+        padding: 30px;
+      }
+      .box {
+        max-width: 450px;
+        margin: auto;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        border: 2px solid #4caf50;
+      }
+      a {
+        display: block;
+        margin-top: 20px;
+        text-align: center;
+        background: #4caf50;
+        padding: 12px;
+        color: white;
+        border-radius: 6px;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h3>Paiement réussi 🎉</h3>
+      <p>
+        Vous avez crédité <b>{{ montant }} FC</b>.
+      </p>
+      <p>
+        Vos <b>ModCoins</b> ont été mis à jour dans votre compte.
+      </p>
+
+      <a href="/">Retour à l'accueil</a>
+    </div>
+  </body>
+</html>

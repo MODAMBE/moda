@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div style="display:flex; gap:18px; align-items:flex-start;">
+    <div style="flex:1;">
+      <div style="background:white; padding:12px; border-radius:12px;">
+        {% if chaine.banner %}
+          <img src="{{ chaine.banner.url }}" style="width:100%; height:200px; object-fit:cover; border-radius:8px;" />
+        {% endif %}
+        <div style="display:flex; gap:12px; align-items:center; margin-top:8px;">
+          {% if chaine.avatar %}
+            <img src="{{ chaine.avatar.url }}" style="width:90px;height:90px;border-radius:12px;object-fit:cover;" />
+          {% else %}
+            <div style="width:90px;height:90px;background:#eee;border-radius:12px;"></div>
+          {% endif %}
+          <div>
+            <h2 style="margin:0">{{ chaine.nom }}</h2>
+            <small>par {{ chaine.auteur.username }}</small>
+          </div>
+          <div style="margin-left:auto;">
+            {% if user.is_authenticated %}
+              {% if est_abonne %}
+                <button id="btn-sub" data-id="{{ chaine.id }}">Se désabonner</button>
+              {% else %}
+                <button id="btn-sub" data-id="{{ chaine.id }}">S’abonner</button>
+              {% endif %}
+            {% else %}
+              <a href="/admin/login/">Se connecter</a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:18px;">Vidéos</h3>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap:12px;">
+        {% for v in videos %}
+          <div style="background:white; border-radius:10px; overflow:hidden;">
+            <a href="#" onclick="openPlayer('{{ v.id }}'); return false;">
+              <img src="{% if v.thumbnail %}
+                  {{ v.thumbnail.url }}
+                {% else %}
+                  {{ v.video_file.url }}
+                {% endif %}"
+                style="width:100%; height:160px; object-fit:cover;" />
+            </a>
+            <div style="padding:8px;">
+              <strong>{{ v.titre }}</strong>
+              <div style="font-size:0.9rem; color:#666;">{{ v.views }} vues • {{ v.created_at|date:'d M Y' }}</div>
+              {% if user == chaine.auteur %}
+                <button class="btn-delete" data-id="{{ v.id }}">Supprimer</button>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <h3 style="margin-top:18px;">Publications</h3>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        {% for p in publications %}
+          <div style="background:{{ p.bg_color }}; color:{{ p.text_color }}; padding:12px; border-radius:10px; font-family:{{ p.font_family }};">
+            {{ p.contenu|linebreaks }}
+            {% for s in p.stickers %}
+              <!-- sticker positions are stored as objects: { "url": "...", "x": "10%", "y":"20%", "w":"80px" } -->
+              <img src="{{ s.url }}" style="position:relative; display:inline-block; width:{{ s.w|default:'48px' }}; margin-left:6px;" alt="sticker" />
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <aside style="width:320px;">
+      <div style="background:white; padding:12px; border-radius:12px;">
+        <h4>A propos</h4>
+        <p>{{ chaine.bio }}</p>
+        <p>
+          <strong>{{ chaine.abonnes.count }}</strong> abonnés
+        </p>
+        <a href="{% url 'app:upload_video' %}">Publier une vidéo</a>
+        <a href="{% url 'app:publish_text' %}">Publier un texte stylé</a>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    document.getElementById('btn-sub')?.addEventListener('click', async function () {
+      const id = this.dataset.id
+      const subscribing = this.textContent.includes('S’abonner')
+      const url = subscribing ? `/api/subscribe/${id}/` : `/api/unsubscribe/${id}/`
+      const res = await fetch(url, { method: 'POST', headers: { 'X-CSRFToken': window.CSRF } })
+      const d = await res.json()
+      if (subscribing) this.textContent = 'Se désabonner'
+      else this.textContent = 'S’abonner'
+    })
+    
+    // delete handlers in channel page
+    document.body.addEventListener('click', async (e) => {
+      const del = e.target.closest('.btn-delete')
+      if (!del) return
+      if (!confirm('Supprimer cette vidéo ?')) return
+      const id = del.dataset.id
+      const res = await fetch(`/api/delete_video/${id}/`, { method: 'POST', headers: { 'X-CSRFToken': window.CSRF } })
+      const d = await res.json()
+      if (d.deleted) location.reload()
+    })
+    
+    function openPlayer(id) {
+      // open a simple full-screen video player overlay
+      const v = document.querySelector('.video-player[data-id="' + id + '"]') || null
+      // fallback: open new window to video file
+      window.open(`/download/${id}/`, '_blank')
+    }
+  </script>
+{% endblock %}

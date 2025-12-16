@@ -1,0 +1,437 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{ publication.titre }} - Détails</title>
+    <link rel="stylesheet" href="{% static 'eglise/css/style.css' %}" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
+
+    <style>
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #f4f6f8;
+        margin: 0;
+        padding: 30px 10px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 920px;
+        background: #fff;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        animation: fadeIn 0.6s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* --- Auteur --- */
+      .auteur {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .auteur img {
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #007bff;
+      }
+
+      .auteur-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .auteur-info strong {
+        color: #111;
+        font-size: 1.1rem;
+      }
+
+      .auteur-info small {
+        color: #6b7280;
+        font-size: 0.9rem;
+      }
+
+      /* --- Publication --- */
+      .publication {
+        margin-top: 10px;
+      }
+
+      .publication h2 {
+        color: #1f2937;
+        margin-bottom: 15px;
+        font-size: 1.6rem;
+        font-weight: 700;
+      }
+
+      .publication p {
+        color: #374151;
+        line-height: 1.6;
+        font-size: 1.05rem;
+        margin-bottom: 15px;
+      }
+
+      .pub-media {
+        position: relative;
+        margin-top: 15px;
+      }
+
+      .pub-media img,
+      .pub-media video {
+        width: 100%;
+        max-height: 520px;
+        border-radius: 15px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        object-fit: cover;
+      }
+
+      .download-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      /* --- Commentaires --- */
+      .comment-section {
+        margin-top: 35px;
+        border-top: 1px solid #e0e0e0;
+        padding-top: 20px;
+      }
+
+      .comment-section h3 {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+        color: #111827;
+        font-weight: 600;
+      }
+
+      .comment {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+
+      .comment img {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .comment-body {
+        background: #f0f2f5;
+        padding: 10px 14px;
+        border-radius: 18px;
+        flex: 1;
+      }
+
+      .comment-body strong {
+        display: block;
+        color: #007bff;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .comment-body p {
+        margin: 0;
+        color: #333;
+      }
+
+      .comment-body small {
+        display: block;
+        color: #888;
+        font-size: 0.8rem;
+        margin-top: 5px;
+      }
+
+      /* --- Formulaire commentaire --- */
+      .comment-form {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-top: 25px;
+      }
+
+      .comment-form img {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .comment-form textarea {
+        flex: 1;
+        border: 1px solid #ccc;
+        border-radius: 25px;
+        padding: 10px 15px;
+        font-family: inherit;
+        resize: none;
+        min-height: 45px;
+      }
+
+      .comment-form button {
+        background: #007bff;
+        border: none;
+        color: white;
+        border-radius: 50%;
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+        cursor: pointer;
+      }
+
+      .back-btn {
+        display: inline-block;
+        margin-top: 30px;
+        text-decoration: none;
+        background: #007bff;
+        color: #fff;
+        padding: 12px 25px;
+        border-radius: 15px;
+        font-weight: 600;
+      }
+
+      /* --- Visionneuse (corrigée et indépendante) --- */
+      .viewer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.9);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        flex-direction: column;
+      }
+
+      .viewer.active {
+        display: flex;
+      }
+
+      .viewer img,
+      .viewer video {
+        max-width: 90%;
+        max-height: 85%;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(255,255,255,0.2);
+      }
+
+      .close-viewer {
+        position: absolute;
+        top: 20px;
+        right: 25px;
+        color: white;
+        font-size: 1.8rem;
+        cursor: pointer;
+      }
+
+      .viewer-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: white;
+        font-size: 2.5rem;
+        cursor: pointer;
+        padding: 10px;
+      }
+
+      .viewer-nav.prev { left: 30px; }
+      .viewer-nav.next { right: 30px; }
+
+      .viewer-controls {
+        position: absolute;
+        bottom: 30px;
+        color: white;
+        text-align: center;
+        font-size: 1rem;
+      }
+
+      .viewer-controls button {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        color: white;
+        margin: 5px;
+        border-radius: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .viewer-controls button:hover {
+        background: rgba(255,255,255,0.4);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <!-- Auteur -->
+      <div class="auteur">
+        {% if publication.auteur and publication.auteur.profile and publication.auteur.profile.image %}
+          <img src="{{ publication.auteur.profile.image.url }}" alt="Avatar de {{ publication.auteur.username }}">
+        {% else %}
+
+          <img src="{% static 'eglise/icons/default-profile.png' %}" alt="Avatar par défaut">
+
+          <img src="{% static 'icons/default-profile.png' %}" alt="Avatar par défaut">
+
+        {% endif %}
+        <div class="auteur-info">
+          <strong>{{ publication.auteur.username|default:'Utilisateur inconnu' }}</strong>
+          <small>@{{ publication.auteur.username|default:'anonyme' }}</small>
+        </div>
+      </div>
+
+      <!-- Publication -->
+      <div class="publication">
+        <h2>{{ publication.titre }}</h2>
+        <p>{{ publication.contenu }}</p>
+
+        {% if publication.image %}
+          <div class="pub-media">
+            <img src="{{ publication.image.url }}" onclick="openViewer(0, [{url:'{{ publication.image.url }}', type:'image'}])" alt="Image de la publication">
+            <a href="{{ publication.image.url }}" download class="download-btn" title="Télécharger">⬇</a>
+          </div>
+        {% endif %}
+
+        {% if publication.video %}
+          <div class="pub-media">
+            <video muted autoplay loop playsinline onclick="openViewer(0, [{url:'{{ publication.video.url }}', type:'video'}])">
+              <source src="{{ publication.video.url }}" type="video/mp4" />
+              Votre navigateur ne supporte pas la vidéo.
+            </video>
+            <a href="{{ publication.video.url }}" download class="download-btn" title="Télécharger">⬇</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Commentaires -->
+      <div class="comment-section">
+        <h3>Commentaires</h3>
+
+        {% for commentaire in commentaires %}
+          <div class="comment">
+            {% if commentaire.auteur and commentaire.auteur.profile and commentaire.auteur.profile.image %}
+              <img src="{{ commentaire.auteur.profile.image.url }}" alt="avatar">
+            {% else %}
+
+              <img src="{% static 'eglise/icons/default-profile.png' %}" alt="avatar par défaut">
+
+              <img src="{% static 'icons/default-profile.png' %}" alt="avatar par défaut">
+
+            {% endif %}
+            <div class="comment-body">
+              <strong>{{ commentaire.auteur.username|default:'Utilisateur' }}</strong>
+              <p>{{ commentaire.contenu }}</p>
+              <small>{{ commentaire.date|date:'d M Y H:i' }}</small>
+            </div>
+          </div>
+        {% empty %}
+          <p style="color: #666">Aucun commentaire pour l’instant.</p>
+        {% endfor %}
+
+        {% if user.is_authenticated %}
+          <form action="{% url 'eglise:ajouter_commentaire' publication.id %}" method="post" class="comment-form">
+              {% csrf_token %}
+            {% if user.profile and user.profile.image %}
+              <img src="{{ user.profile.image.url }}" alt="Mon avatar" />
+            {% else %}
+
+              <img src="{% static 'eglise/icons/default-profile.png' %}" alt="Avatar par défaut" />
+
+              <img src="{% static 'icons/default-profile.png' %}" alt="Avatar par défaut" />
+
+            {% endif %}
+            <textarea name="contenu" placeholder="Écrire un commentaire..." required></textarea>
+            <button type="submit">➤</button>
+          </form>
+        {% else %}
+          <p><a href="{% url 'login' %}">Connectez-vous</a> pour commenter.</p>
+        {% endif %}
+      </div>
+
+      <a href="{% url 'eglise:accueil' %}" class="back-btn">⬅ Retour à l'accueil</a>
+    </div>
+
+    <!-- Visionneuse -->
+    <div class="viewer" id="viewer">
+      <span class="close-viewer" onclick="closeViewer()">✖</span>
+      <span class="viewer-nav prev" onclick="prevViewer()">❮</span>
+      <div id="viewerContent"></div>
+      <span class="viewer-nav next" onclick="nextViewer()">❯</span>
+
+      <div class="viewer-controls">
+        <div>
+          <button onclick="togglePlay()">⏯</button>
+          <button onclick="toggleMute()">🔊</button>
+          <button onclick="changeSpeed()">⚙️</button>
+          <button onclick="toggleFullscreen()">🔳</button>
+        </div>
+        <div id="viewerTime">0:00 / 0:00</div>
+      </div>
+    </div>
+
+    <script>
+      let mediaList = [], currentIndex = 0, videoElement = null;
+
+      function openViewer(index, list) {
+        mediaList = list;
+        currentIndex = index;
+        showViewer();
+        document.getElementById('viewer').classList.add('active');
+      }
+
+      function showViewer() {
+        const media = mediaList[currentIndex];
+        const viewerContent = document.getElementById('viewerContent');
+        viewerContent.innerHTML = '';
+        if (media.type === 'video') {
+          videoElement = document.createElement('video');
+          videoElement.src = media.url;
+          videoElement.autoplay = true;
+          videoElement.muted = true;
+          videoElement.loop = true;
+          videoElement.controls = false;
+          viewerContent.appendChild(videoElement);
+        } else {
+          const img = document.createElement('img');
+          img.src = media.url;
+          viewerContent.appendChild(img);
+        }
+      }
+
+      function closeViewer() {
+        const viewer = document.getElementById('viewer');
+        viewer.classList.remove('active');
+        if (videoElement) { videoElement.pause(); videoElement = null; }
+      }
+
+      function nextViewer() { currentIndex = (currentIndex + 1) % mediaList.length; showViewer(); }
+      function prevViewer() { currentIndex = (currentIndex - 1 + mediaList.length) % mediaList.length; showViewer(); }
+    </script>
+  </body>
+</html>

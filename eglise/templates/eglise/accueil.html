@@ -1,0 +1,325 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ModApp</title>
+
+    <link rel="stylesheet" href="{% static 'eglise/css/style.css' %}" />
+    <script src="{% static 'eglise/js/script.js' %}" defer></script>
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+    <script src="{% static 'js/script.js' %}" defer></script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      
+      body {
+        font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        background: #f5f7fb;
+        color: #333;
+      }
+      
+      /* HEADER */
+      .app-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(90deg, #1e1e2f, #29293d);
+        color: #fff;
+        padding: 0.7rem 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 1000;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      }
+      
+      .app-header h1 {
+        font-size: 1.3rem;
+        font-weight: 600;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: color 0.3s;
+      }
+      
+      .app-header h1:hover {
+        color: #00aaff;
+      }
+      
+      .menu-icon {
+        width: 1.8rem;
+        height: 1.8rem;
+        cursor: pointer;
+        transition: transform 0.3s;
+      }
+      
+      .menu-icon:hover {
+        transform: rotate(20deg);
+      }
+      
+      /* TOP NAV */
+      .top-bar {
+        position: fixed;
+        top: 52px;
+        left: 0;
+        right: 0;
+        background: #333;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        padding: 0.5rem 0.8rem;
+        z-index: 999;
+      }
+      
+      .top-links {
+        display: flex;
+        gap: 0.8rem;
+        flex: 1;
+        justify-content: space-around;
+      }
+      
+      .top-bar a {
+        color: white;
+        text-decoration: none;
+        font-size: 0.75rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: all 0.3s;
+      }
+      
+      .top-bar a:hover {
+        color: #00aaff;
+      }
+      
+      .nav-icon {
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-bottom: 3px;
+      }
+      
+      /* SEARCH BOX */
+      .search-box {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border-radius: 20px;
+        padding: 0.3rem 0.6rem;
+        width: 140px;
+      }
+      
+      .search-box input {
+        border: none;
+        outline: none;
+        font-size: 0.8rem;
+        width: 100%;
+      }
+      
+      .search-box button {
+        border: none;
+        background: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        color: #007bff;
+      }
+      
+      /* PROFILE */
+      .profile-section {
+        margin-left: auto;
+      }
+      
+      .profile-img {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #fff;
+      }
+      
+      /* MAIN */
+      main {
+        padding-top: 110px;
+        padding-bottom: 90px;
+        width: 95%;
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      
+      h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #222;
+        font-size: 1.5rem;
+      }
+      
+      /* BOTTOM NAV */
+      .bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(90deg, #1e1e2f, #29293d);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 0.6rem 0;
+        border-radius: 12px 12px 0 0;
+        z-index: 1000;
+      }
+      
+      .bottom-bar a {
+        color: white;
+        text-decoration: none;
+        text-align: center;
+        font-size: 0.75rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: all 0.3s;
+      }
+      
+      .bottom-bar a:hover {
+        color: #00aaff;
+      }
+      
+      .bottom-bar .nav-icon {
+        width: 1.6rem;
+        height: 1.6rem;
+        margin-bottom: 3px;
+      }
+      
+      @media (max-width: 768px) {
+        .top-bar a span,
+        .bottom-bar a span {
+          font-size: 0.65rem;
+        }
+        .nav-icon {
+          width: 1.3rem;
+          height: 1.3rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- HEADER -->
+    <div class="app-header">
+      <h1 onclick="window.location.href='{% url 'eglise:accueil' %}'">ModApp</h1>
+
+      <a href="{% url 'eglise:parametres' %}"><img src="{% static 'eglise/icons/parametre.png' %}" alt="Paramètres" class="menu-icon" /></a>
+
+      <a href="{% url 'eglise:parametres' %}"><img src="{% static 'icons/parametre.png' %}" alt="Paramètres" class="menu-icon" /></a>
+    </div>
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+      <div class="top-links">
+        <!-- ✅ Accueil recharge tout le fil -->
+        <a href="{% url 'eglise:accueil' %}">
+          <img src="{% static 'eglise/icons/accueil.png' %}" class="nav-icon" alt="Accueil" />
+
+          <img src="{% static 'icons/accueil.png' %}" class="nav-icon" alt="Accueil" />
+
+          <span>Accueil</span>
+        </a>
+
+        <!-- ✅ Filtres -->
+        <a href="{% url 'eglise:accueil' %}?type=image">
+          
+          <img src="{% static 'eglise/icons/images.png' %}" class="nav-icon" alt="Images" />
+          
+          <img src="{% static 'icons/images.png' %}" class="nav-icon" alt="Images" />
+          
+          <span>Images</span>
+        </a>
+
+        <a href="{% url 'eglise:accueil' %}?type=video">
+          
+          <img src="{% static 'eglise/icons/video.png' %}" class="nav-icon" alt="Vidéos" />
+          
+          <img src="{% static 'icons/video.png' %}" class="nav-icon" alt="Vidéos" />
+           
+          <span>Vidéos</span>
+        </a>
+
+        <a href="{% url 'eglise:notifications' %}">
+          
+          <img src="{% static 'eglise/icons/notification.png' %}" class="nav-icon" alt="Notifications" />
+          
+          <img src="{% static 'icons/notification.png' %}" class="nav-icon" alt="Notifications" />
+          
+          <span>Notifs</span>
+        </a>
+
+        <!-- 🔍 Recherche -->
+        <form method="GET" action="{% url 'eglise:recherche_eglise' %}" class="search-box">
+          <input type="text" name="q" placeholder="Rechercher..." />
+          <button type="submit">🔍</button>
+        </form>
+      </div>
+
+      <div class="profile-section">
+        {% if user.is_authenticated %}
+          <a href="{% url 'eglise:profil' user.username %}">
+            {% if user.profile.image %}
+              <img src="{{ user.profile.image.url }}" alt="Profil" class="profile-img" />
+            {% else %}
+              
+              <img src="{% static 'eglise/icons/default-profile.png' %}" alt="Profil" class="profile-img" />
+              
+              <img src="{% static 'icons/default-profile.png' %}" alt="Profil" class="profile-img" />
+              
+            {% endif %}
+          </a>
+        {% else %}
+          <a href="{% url 'eglise:connexion' %}" style="color:white;">Profil</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main>
+      {% block content %}
+        <h2>Fil d’actualité</h2>
+        {% include 'eglise/espace_milieu.html' %}
+      {% endblock %}
+    </main>
+    <!-- BOTTOM NAV -->
+    <div class="bottom-bar">
+      <a href="{% url 'eglise:accueil' %}?type=programme">
+        
+        <img src="{% static 'eglise/icons/programme1.png' %}" class="nav-icon" alt="Programme" />
+        
+        <img src="{% static 'icons/programme1.png' %}" class="nav-icon" alt="Programme" />
+        
+        <span>Programme</span>
+      </a>
+
+      <a href="{% url 'eglise:dialogues' %}">
+        
+        <img src="{% static 'eglise/icons/discussion.png' %}" class="nav-icon" alt="Dialogues" />
+        <span>Dialogues</span>
+      </a>
+      <a href="{% url 'eglise:creer_publication' %}">
+        <img src="{% static 'eglise/icons/publicite.png' %}" class="nav-icon" alt="Ajouter" />
+        
+        <img src="{% static 'icons/discussion.png' %}" class="nav-icon" alt="Dialogues" />
+        <span>Dialogues</span>
+      </a>
+      <a href="{% url 'eglise:creer_publication' %}">
+        <img src="{% static 'icons/publicite.png' %}" class="nav-icon" alt="Ajouter" />
+        
+        <span>Ajouter</span>
+      </a>
+    </div>
+  </body>
+</html>

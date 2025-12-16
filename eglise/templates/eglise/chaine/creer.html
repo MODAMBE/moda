@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <h2>Créer une chaîne</h2>
+
+  <form method="post" action="{% url 'eglise:chaine_form' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <label>Nom :</label>
+    <input type="text" name="name" required />
+
+    <label>Identifiant (username) :</label>
+    <input type="text" name="username" />
+
+    <label>Biographie :</label>
+    <textarea name="bio"></textarea>
+
+    <label>Avatar :</label>
+    <input type="file" name="avatar" />
+
+    <label>Bannière :</label>
+    <input type="file" name="banner" />
+
+    <button type="submit">Créer</button>
+  </form>
+{% endblock %}

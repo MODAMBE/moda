@@ -1,0 +1,610 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ publication.titre }} - Détails</title>
+
+    <link rel="stylesheet" href="{% static 'eglise/css/style.css' %}" />
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+    <style>
+      /* --- THEME SOMBRE TYPE WHATSAPP --- */
+      .discussion-item {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px;
+        border-bottom: 1px solid #333;
+      }
+      .discussion-item .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      .discussion-item .badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: #25d366;
+        color: #000;
+        font-size: 12px;
+        font-weight: bold;
+        padding: 2px 6px;
+        border-radius: 50%;
+      }
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #121b22;
+        margin: 0;
+        padding: 20px 10px;
+        display: flex;
+        justify-content: center;
+        color: #e1e1e1;
+      }
+      .container {
+        width: 100%;
+        max-width: 900px;
+        background: #1e2a33;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 0.5s ease-in-out;
+        box-sizing: border-box;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(15px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .auteur {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+      .auteur img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #25d366;
+      }
+      .publication h2 {
+        color: #e1e1e1;
+        margin-bottom: 10px;
+        font-size: 1.6rem;
+      }
+      .publication p {
+        color: #cfd8dc;
+        line-height: 1.7;
+        font-size: 1.05rem;
+        word-wrap: break-word;
+      }
+      .pub-media img,
+      .pub-media video {
+        width: 100%;
+        max-height: 500px;
+        border-radius: 12px;
+        margin-top: 15px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        object-fit: cover;
+        cursor: pointer;
+      }
+      .chat-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #075e54;
+        color: #fff;
+        padding: 12px;
+        border-radius: 10px 10px 0 0;
+        margin-top: 25px;
+        flex-wrap: wrap;
+      }
+      .chat-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+      .chat-name {
+        font-size: 18px;
+        font-weight: bold;
+      }
+      .status {
+        font-size: 12px;
+        color: #d9d9d9;
+        margin-left: auto;
+      }
+      .call-buttons {
+        margin-left: auto;
+        display: flex;
+        gap: 5px;
+      }
+      .call-buttons button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 20px;
+        color: #fff;
+      }
+      .messages-box {
+        background: #2a3942;
+        height: 50vh;
+        overflow-y: auto;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        border-radius: 10px;
+      }
+      .message {
+        max-width: 70%;
+        padding: 12px;
+        border-radius: 14px;
+        font-size: 14px;
+        position: relative;
+        word-break: break-word;
+      }
+      .message.sent {
+        background: #2a3942;
+        color: #f8f1f1ff;
+        align-self: flex-end;
+      }
+      .message.received {
+        background: #37474f;
+        color: #fff;
+        align-self: flex-start;
+      }
+      .chat-form {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #1e2a33;
+        padding: 8px;
+        border-radius: 0 0 10px 10px;
+        border-top: 1px solid #444;
+        margin-top: 10px;
+      }
+      .chat-form input[type='text'] {
+        flex: 1;
+        border-radius: 20px;
+        padding: 10px;
+        border: 1px solid #555;
+        font-size: 1rem;
+        background: #2a3942;
+        color: #fff;
+      }
+      .file-btn,
+      .audio-btn,
+      .send-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 20px;
+        color: #fff;
+      }
+      .file-preview {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+      .file-preview div {
+        background: #37474f;
+        padding: 12px 15px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 16px;
+        min-width: 200px;
+        color: #fff;
+      }
+      .file-preview button {
+        cursor: pointer;
+        padding: 6px 10px;
+        border: none;
+        border-radius: 6px;
+        background: #25d366;
+        color: #000;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- ========================== LISTE DES DISCUSSIONS =========================== -->
+      {% for discussion in mes_discussions %}
+        <div class="discussion-item" style="position:relative;">
+          {% if discussion.correspondant.profile and discussion.correspondant.profile.image %}
+            <img src="{{ discussion.correspondant.profile.image.url }}" class="avatar" />
+          {% else %}
+
+            <img src="{% static 'eglise/icons/default-profile.png' %}" class="avatar" />
+
+            <img src="{% static 'icons/default-profile.png' %}" class="avatar" />
+
+          {% endif %}
+          <span>{{ discussion.correspondant.username }}</span>
+          {% if discussion.non_lus_count > 0 %}
+            <span class="badge" style=" position:absolute; top:0; right:0; background:#25d366; color:#fff; border-radius:50%; padding:2px 6px; font-size:12px;">{{ discussion.non_lus_count }}</span>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <!-- ========================== PUBLICATION =========================== -->
+      <div class="publication">
+        <h2>{{ publication.titre }}</h2>
+        <p>{{ publication.contenu }}</p>
+        {% if publication.image %}
+          <div class="pub-media">
+            <img src="{{ publication.image.url }}" class="zoomable" />
+          </div>
+        {% endif %}
+        {% if publication.video %}
+          <div class="pub-media">
+            <video controls class="zoomable">
+              <source src="{{ publication.video.url }}" type="video/mp4" />
+            </video>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- ========================== CHAT HEADER =========================== -->
+      <div class="chat-header">
+        {% if correspondant.profile and correspondant.profile.image %}
+          <img src="{{ correspondant.profile.image.url }}" class="chat-avatar" />
+        {% else %}
+
+          <img src="{% static 'eglise/icons/default-profile.png' %}" class="chat-avatar" />
+
+          <img src="{% static 'icons/default-profile.png' %}" class="chat-avatar" />
+
+        {% endif %}
+        <span class="chat-name">{{ correspondant.username }}</span>
+        <span class="status" id="userStatus">En ligne ?</span>
+        <div class="call-buttons">
+          <button type="button" onclick="window.location.href='{% url 'eglise:audio_appel' correspondant.id %}'">📞</button>
+          <button type="button" onclick="window.location.href='{% url 'eglise:video_appel' correspondant.id %}'">🎥</button>
+        </div>
+      </div>
+
+      <!-- ========================== MESSAGE LIST =========================== -->
+      <div class="messages-box" id="messagesBox">
+        {% for msg in messages %}
+          <div class="message {% if msg.expediteur == user %}
+              sent
+            {% else %}
+              received
+            {% endif %}"
+            {% if msg.front_type != 'appel' %} data-msg-id="{{ msg.id }}"{% endif %}>
+
+            {% if msg.front_type == 'texte' %}
+              {{ msg.contenu }}
+
+            {% elif msg.front_type == 'image' %}
+              <div style="position:relative; display:inline-block;">
+                <img src="{{ msg.fichier.url }}" class="zoomable-msg" style="max-width:200px; border-radius:8px; cursor:pointer;" />
+                <a href="{{ msg.fichier.url }}" download style="position:absolute; bottom:5px; right:5px; background:#25d366; color:#000; padding:2px 6px; border-radius:4px; font-size:12px; text-decoration:none;">⬇</a>
+              </div>
+
+            {% elif msg.front_type == 'video' %}
+              <video src="{{ msg.fichier.url }}" controls style="max-width:250px; border-radius:8px;"></video>
+
+            {% elif msg.front_type == 'audio' %}
+              <div style="display:inline-block; padding:2px 4px; background:none;">
+                <audio controls style="width:150px; height:30px;">
+                  <source src="{{ msg.fichier.url }}" type="audio/mpeg" />
+                </audio>
+              </div>
+
+            {% elif msg.front_type == 'document' %}
+              {% with fname=msg.fichier.name|lower %}
+                <div style="position:relative; display:inline-block; margin:5px 0;">
+                  <a href="{{ msg.fichier.url }}" target="_blank" style="display:inline-block; padding:6px 10px; background:#25d366; color:#000; border-radius:6px; text-decoration:none; font-weight:bold;">
+                    {% if fname|slice:'-4:' == '.pdf' %}
+                      📄 PDF : {{ msg.fichier.name }}
+                    {% elif fname|slice:'-4:' == '.doc' or fname|slice:'-5:' == '.docx' %}
+                      📝 Word : {{ msg.fichier.name }}
+                    {% elif fname|slice:'-4:' == '.xls' or fname|slice:'-5:' == '.xlsx' %}
+                      📊 Excel : {{ msg.fichier.name }}
+                    {% elif fname|slice:'-4:' == '.ppt' or fname|slice:'-5:' == '.pptx' %}
+                      📈 PowerPoint : {{ msg.fichier.name }}
+                    {% else %}
+                      📎 {{ msg.fichier.name }}
+                    {% endif %}
+                  </a>
+                </div>
+              {% endwith %}
+
+            {% elif msg.front_type == 'appel' %}
+              <!-- Badge pour appel -->
+              <div style="display:inline-block; padding:6px 10px; border-radius:6px; color:#fff;
+                  {% if msg.statut == 'manque' %}background:#e53935;
+                  {% elif msg.statut == 'refuse' %}background:#f44336;
+                  {% elif msg.statut == 'accepte' %}background:#25d366;
+                  {% elif msg.statut == 'termine' %}background:#607d8b;
+                  {% else %}background:#9e9e9e;{% endif %}">
+                {% if msg.statut == 'manque' %}❌ Appel manqué
+                {% elif msg.statut == 'refuse' %}❌ Appel refusé
+                {% elif msg.statut == 'accepte' %}✅ Appel accepté
+                {% elif msg.statut == 'termine' %}📴 Appel terminé
+                {% else %}📞 Appel{% endif %}
+              </div>
+
+            {% else %}
+              <a href="{{ msg.fichier.url }}" download>📎 {{ msg.fichier.name }}</a>
+            {% endif %}
+
+            <!-- Heure du message ajoutée -->
+            <small style="display:block; font-size:11px; color:#ccc; margin-top:3px;">
+              {{ msg.date_envoi|date:"H:i" }}
+            </small>
+
+          </div>
+        {% empty %}
+          <p style="text-align:center;color:#777;">Aucun message pour l’instant</p>
+        {% endfor %}
+      </div>
+      <!-- ========================== OVERLAY ZOOM IMAGE =========================== -->
+      <div id="zoomOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); justify-content:center; align-items:center; z-index:9999; flex-direction:column;">
+        <button id="closeZoom" style="position:absolute; top:20px; right:20px; font-size:24px; background:#25d366; border:none; border-radius:50%; width:40px; height:40px; color:#000; cursor:pointer;">✖</button>
+        <img id="zoomedImg" src="" style="max-width:95%; max-height:85%; border-radius:8px; margin-bottom:10px;" />
+        <div style="display:flex; gap:20px;">
+          <button id="prevImg" style="font-size:20px; padding:8px 16px; cursor:pointer;">⬅ Précédent</button>
+          <button id="nextImg" style="font-size:20px; padding:8px 16px; cursor:pointer;">Suivant ➡</button>
+        </div>
+      </div>
+
+      <script>
+        // Récupérer toutes les images zoomables dans le chat
+        const chatImages = Array.from(document.querySelectorAll('.zoomable-msg'))
+        let currentIndex = 0
+        
+        const overlay = document.getElementById('zoomOverlay')
+        const zoomedImg = document.getElementById('zoomedImg')
+        const closeBtn = document.getElementById('closeZoom')
+        const prevBtn = document.getElementById('prevImg')
+        const nextBtn = document.getElementById('nextImg')
+        
+        function showImage(index) {
+          if (index < 0) index = chatImages.length - 1
+          if (index >= chatImages.length) index = 0
+          currentIndex = index
+          zoomedImg.src = chatImages[currentIndex].src
+          overlay.style.display = 'flex'
+        }
+        
+        // Cliquer sur une image pour zoom
+        chatImages.forEach((img, index) => {
+          img.onclick = () => showImage(index)
+        })
+        
+        // Navigation
+        prevBtn.onclick = (e) => {
+          e.stopPropagation()
+          showImage(currentIndex - 1)
+        }
+        nextBtn.onclick = (e) => {
+          e.stopPropagation()
+          showImage(currentIndex + 1)
+        }
+        
+        // Fermer overlay
+        closeBtn.onclick = () => (overlay.style.display = 'none')
+        overlay.onclick = (e) => {
+          if (e.target === overlay) overlay.style.display = 'none'
+        }
+      </script>
+
+      <!-- ========================== CHAT FORMULAIRE =========================== -->
+      {% if user.is_authenticated %}
+        <form action="" method="post" enctype="multipart/form-data" class="chat-form" id="chatForm">
+          {% csrf_token %}
+          <!-- BOUTON FICHIER STYLE WHATSAPP -->
+          <label class="file-btn">📎<input type="file" name="file" hidden accept="image/*,video/*,audio/*,.pdf,.doc,.docx" onchange="previewFile(this.files[0])" /></label>
+          <button type="button" class="audio-btn" id="audioBtn">🎤</button>
+          <input type="text" name="message" placeholder="Message..." />
+          <button type="submit" class="send-btn">➤</button>
+        </form>
+
+        <!-- PREVIEW FICHIERS -->
+        <div id="filePreviewContainer" class="file-preview" style="display:none; margin-top:10px; padding:10px; border-radius:8px; background:#f2f2f2; max-width:80%;"></div>
+
+        <!-- PREVIEW AUDIO -->
+        <div id="audioPreview" style="display:none; flex-direction:column; gap:5px; margin-left:10px;">
+          <audio id="previewPlayer" controls></audio>
+          <div>
+            <button id="sendAudioBtn">Envoyer</button>
+            <button id="cancelAudioBtn">Annuler</button>
+          </div>
+        </div>
+        <canvas id="audioMeter" width="150" height="30" style="display:none; margin-top:5px;"></canvas>
+      {% endif %}
+
+      <script>
+        /* ------------------------------- PREVIEW FICHIER (STYLE WHATSAPP) --------------------------------*/
+        const chatForm = document.getElementById('chatForm')
+        const fileInput = chatForm.querySelector("input[name='file']")
+        const filePreviewContainer = document.getElementById('filePreviewContainer')
+        function previewFile(file) {
+          filePreviewContainer.innerHTML = ''
+          if (!file) {
+            filePreviewContainer.style.display = 'none'
+            return
+          }
+          filePreviewContainer.style.display = 'flex'
+          filePreviewContainer.style.flexWrap = 'wrap'
+          filePreviewContainer.style.gap = '10px'
+          let el
+          if (file.type.startsWith('image/')) {
+            el = document.createElement('img')
+            el.src = URL.createObjectURL(file)
+            el.style.maxWidth = '150px'
+            el.style.cursor = 'pointer'
+            el.style.borderRadius = '8px'
+            el.onclick = () => zoomImage(el.src)
+          } else if (file.type.startsWith('video/')) {
+            el = document.createElement('video')
+            el.src = URL.createObjectURL(file)
+            el.controls = true
+            el.style.maxWidth = '180px'
+            el.style.borderRadius = '8px'
+          } else if (file.type.startsWith('audio/')) {
+            el = document.createElement('audio')
+            el.src = URL.createObjectURL(file)
+            el.controls = true
+            el.style.maxWidth = '180px'
+          } else {
+            el = document.createElement('div')
+            el.innerHTML = '📄 ' + file.name
+            el.style.fontWeight = 'bold'
+            el.style.padding = '8px'
+            el.style.background = '#37474f'
+            el.style.color = '#fff'
+            el.style.borderRadius = '8px'
+            el.style.display = 'flex'
+            el.style.alignItems = 'center'
+            el.style.justifyContent = 'space-between'
+            const downloadBtn = document.createElement('button')
+            downloadBtn.textContent = 'Télécharger'
+            downloadBtn.style.cursor = 'pointer'
+            downloadBtn.style.background = '#25d366'
+            downloadBtn.style.color = '#000'
+            downloadBtn.style.border = 'none'
+            downloadBtn.style.borderRadius = '6px'
+            downloadBtn.style.padding = '4px 8px'
+            downloadBtn.onclick = () => {
+              const url = URL.createObjectURL(file)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = file.name
+              a.click()
+              URL.revokeObjectURL(url)
+            }
+            el.appendChild(downloadBtn)
+          }
+          filePreviewContainer.appendChild(el)
+        }
+        
+        // Zoom image function
+        zoomImage = (src) => {
+          const overlay = document.getElementById('zoomOverlay')
+          const zoomed = document.getElementById('zoomedImg')
+          zoomed.src = src
+          overlay.style.display = 'flex'
+        }
+        
+        // Envoi du fichier via AJAX
+        chatForm.addEventListener('submit', async (e) => {
+          e.preventDefault()
+          const fd = new FormData(chatForm)
+          if (fileInput.files[0]) fd.append('file', fileInput.files[0])
+          const res = await fetch(chatForm.action || window.location.href, { method: 'POST', body: fd })
+          if (res.ok) {
+            fileInput.value = ''
+            filePreviewContainer.innerHTML = ''
+            filePreviewContainer.style.display = 'none'
+            chatForm.querySelector("input[name='message']").value = ''
+            location.reload()
+          } else {
+            alert("Erreur lors de l'envoi du fichier.")
+          }
+        })
+        
+        /* ------------------------------- TON CODE AUDIO ORIGINAL --------------------------------*/
+        let mediaRecorder,
+          audioChunks = [],
+          audioBlob
+        const audioBtnEl = document.getElementById('audioBtn')
+        const audioPreviewEl = document.getElementById('audioPreview')
+        const previewPlayerEl = document.getElementById('previewPlayer')
+        const sendAudioBtnEl = document.getElementById('sendAudioBtn')
+        const cancelAudioBtnEl = document.getElementById('cancelAudioBtn')
+        const audioMeterEl = document.getElementById('audioMeter')
+        const meterCtx = audioMeterEl.getContext('2d')
+        let audioStream, audioContext, analyser, dataArray, animationId
+        
+        async function startRecording() {
+          try {
+            audioStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+            audioContext = new (window.AudioContext || window.webkitAudioContext)()
+            const source = audioContext.createMediaStreamSource(audioStream)
+            analyser = audioContext.createAnalyser()
+            analyser.fftSize = 256
+            source.connect(analyser)
+            dataArray = new Uint8Array(analyser.frequencyBinCount)
+            mediaRecorder = new MediaRecorder(audioStream)
+            audioChunks = []
+            mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data)
+            mediaRecorder.onstop = () => {
+              audioBlob = new Blob(audioChunks, { type: 'audio/webm' })
+              previewPlayerEl.src = URL.createObjectURL(audioBlob)
+              audioPreviewEl.style.display = 'flex'
+              audioMeterEl.style.display = 'none'
+              cancelAnimationFrame(animationId)
+              audioStream.getTracks().forEach((t) => t.stop())
+              audioContext.close()
+              audioBtnEl.textContent = '🎤'
+            }
+            mediaRecorder.start()
+            audioMeterEl.style.display = 'block'
+            drawMeter()
+            audioBtnEl.textContent = '⏹️'
+          } catch (e) {
+            alert('Micro inaccessible : ' + e.message)
+          }
+        }
+        
+        function drawMeter() {
+          if (!analyser) return
+          analyser.getByteFrequencyData(dataArray)
+          const vol = dataArray.reduce((a, b) => a + b) / dataArray.length
+          meterCtx.clearRect(0, 0, audioMeterEl.width, audioMeterEl.height)
+          meterCtx.fillStyle = '#e6290c'
+          meterCtx.fillRect(0, 0, (vol / 255) * audioMeterEl.width, audioMeterEl.height)
+          animationId = requestAnimationFrame(drawMeter)
+        }
+        
+        audioBtnEl.addEventListener('click', () => {
+          if (!mediaRecorder || mediaRecorder.state !== 'recording') startRecording()
+          else mediaRecorder.stop()
+        })
+        
+        sendAudioBtnEl.addEventListener('click', async () => {
+          if (!audioBlob) return
+          const fd = new FormData()
+          fd.append('audio', audioBlob, 'audio_message.webm')
+          fd.append('csrfmiddlewaretoken', '{{ csrf_token }}')
+          const res = await fetch(window.location.href, { method: 'POST', body: fd })
+          if (res.ok) location.reload()
+        })
+        
+        cancelAudioBtnEl.addEventListener('click', () => {
+          audioPreviewEl.style.display = 'none'
+          previewPlayerEl.src = ''
+          audioBlob = null
+          audioBtnEl.textContent = '🎤'
+        })
+        
+        // Zoom images dans messages déjà envoyés
+        document.querySelectorAll('.zoomable-msg').forEach((img) => (img.onclick = () => zoomImage(img.src)))
+      </script>
+    </div>
+  </body>
+</html>

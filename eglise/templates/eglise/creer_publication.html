@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Créer une publication</title>
+    <link rel="stylesheet" href="{% static 'eglise/css/style.css' %}" />
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1f2937, #111827);
+        margin: 0;
+        padding: 0;
+        color: #f3f4f6;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+      }
+      
+      h2 {
+        text-align: center;
+        font-size: clamp(1.5rem, 4vw, 2.2rem);
+        margin-bottom: 20px;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 12px 25px;
+        border-radius: 15px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+      }
+      
+      form {
+        width: 90%;
+        max-width: 600px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(6px);
+      }
+      
+      form label {
+        display: block;
+        margin-top: 15px;
+        font-weight: bold;
+        font-size: 1rem;
+        color: #e5e7eb;
+      }
+      
+      form input[type='file'],
+      form input[type='text'],
+      form textarea,
+      form select {
+        width: 100%;
+        margin-top: 8px;
+        padding: 12px;
+        border-radius: 10px;
+        border: none;
+        outline: none;
+        font-size: 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        color: #f9fafb;
+        transition: all 0.3s ease;
+      }
+      
+      /* Style spécial pour le select (zone affichée) */
+      form select {
+        background: #4b5563; /* gris foncé */
+        color: #ffffff; /* texte blanc */
+      }
+      
+      /* Style des options dans la liste déroulante */
+      form select option {
+        background: #374151; /* gris encore plus foncé */
+        color: #ffffff; /* texte blanc */
+        padding: 10px;
+      }
+      
+      form input[type='file']:hover,
+      form input[type='text']:focus,
+      form textarea:focus,
+      form select:focus {
+        background: rgba(255, 255, 255, 0.2);
+      }
+      
+      button {
+        margin-top: 20px;
+        padding: 12px 20px;
+        background: #0b84ff;
+        border: none;
+        border-radius: 25px;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+      }
+      
+      button:hover {
+        background: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.3);
+      }
+      
+      /* Aperçu fichiers */
+      #preview {
+        margin-top: 20px;
+        text-align: left;
+      }
+      
+      #preview div {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        color: #f3f4f6;
+        font-size: 0.95rem;
+        box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.3);
+      }
+      
+      #preview img {
+        margin-top: 8px;
+        max-width: 100%;
+        border-radius: 10px;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.5);
+      }
+      
+      /* Responsive */
+      @media (max-width: 600px) {
+        form {
+          padding: 20px;
+        }
+        button {
+          font-size: 0.9rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h2>Créer une publication</h2>
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ pub_form.as_p }}
+
+        <label for="id_fichiers">Ajouter fichiers :</label>
+        <input type="file" name="fichiers" id="id_fichiers" multiple />
+
+        <!-- Aperçu -->
+        <div id="preview"></div>
+
+        <button type="submit">🚀 Publier</button>
+      </form>
+    </div>
+
+    <script>
+      const inputFiles = document.getElementById('id_fichiers')
+      const preview = document.getElementById('preview')
+      
+      inputFiles.addEventListener('change', () => {
+        preview.innerHTML = ''
+        Array.from(inputFiles.files).forEach((file) => {
+          const div = document.createElement('div')
+          div.textContent = '📎 ' + file.name
+      
+          if (file.type.startsWith('image/')) {
+            const img = document.createElement('img')
+            img.src = URL.createObjectURL(file)
+            div.appendChild(img)
+          }
+      
+          preview.appendChild(div)
+        })
+      })
+    </script>
+  </body>
+</html>

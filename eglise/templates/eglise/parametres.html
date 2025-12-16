@@ -1,0 +1,270 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-theme="{{ user.profile.theme }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paramètres - AppMOEG</title>
+  <link rel="stylesheet" href="{% static 'eglise/css/style.css' %}">
+  <style>
+    :root {
+      --bg-color: #f5f5f5;
+      --header-bg: #222;
+      --header-color: #fff;
+      --main-bg: #fff;
+      --text-color: #222;
+      --btn-bg: #222;
+      --btn-hover: #444;
+      --input-bg: #fff;
+      --input-border: #ccc;
+      --toggle-bg: #ccc;
+      --toggle-active: #0b84ff;
+    }
+
+    [data-theme="sombre"] {
+      --bg-color: #121212;
+      --header-bg: #1f1f1f;
+      --header-color: #eee;
+      --main-bg: #1b1b1b;
+      --text-color: #eee;
+      --btn-bg: #333;
+      --btn-hover: #555;
+      --input-bg: #2a2a2a;
+      --input-border: #555;
+      --toggle-bg: #555;
+      --toggle-active: #0b84ff;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .app-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--header-bg);
+      color: var(--header-color);
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .app-header h1 {
+      font-size: 1.2rem;
+      margin: 0;
+      cursor: pointer;
+    }
+
+    .menu-icon { width: 1.8rem; height: 1.8rem; cursor: pointer; }
+
+    main {
+      padding-top: 70px;
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--main-bg);
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 2rem;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    h2 { margin-top: 0; color: var(--text-color); }
+
+    .param-section { margin-bottom: 2rem; }
+
+    .param-section label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .param-section input[type="text"],
+    .param-section input[type="password"],
+    .param-section select {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 5px;
+      border: 1px solid var(--input-border);
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+      background-color: var(--input-bg);
+      color: var(--text-color);
+      transition: background 0.3s, color 0.3s, border-color 0.3s;
+    }
+
+    /* Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+      margin-right: 0.5rem;
+    }
+    .switch input { display: none; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--toggle-bg);
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px; width: 18px;
+      left: 3px; bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--toggle-active);
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .save-btn {
+      display: inline-block;
+      background-color: var(--btn-bg);
+      color: var(--header-color);
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s;
+    }
+    .save-btn:hover { background-color: var(--btn-hover); }
+
+    .success-msg {
+      background-color: #0b84ff;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      main { padding: 1rem; }
+    }
+  </style>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      // Theme toggle instantané
+      const themeSelect = document.getElementById("theme");
+      themeSelect.addEventListener("change", function() {
+        document.documentElement.setAttribute("data-theme", this.value);
+      });
+    });
+  </script>
+</head>
+
+<body>
+  <div class="app-header">
+    <h1 onclick="window.location.href='{% url 'eglise:accueil' %}'">AppMOEG</h1>
+    <a href="{% url 'eglise:parametres' %}">
+      <img src="{% static 'eglise/icons/parametre.png' %}" alt="Paramètres" class="menu-icon" />
+    </a>
+  </div>
+
+  <main>
+    <h2>Paramètres du compte</h2>
+
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="success-msg">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+      {% csrf_token %}
+
+      <!-- Thème -->
+      <div class="param-section">
+        <label for="theme">Thème de l'application</label>
+        <select name="theme" id="theme">
+          <option value="clair" {% if user.profile.theme == 'clair' %}selected{% endif %}>Clair</option>
+          <option value="sombre" {% if user.profile.theme == 'sombre' %}selected{% endif %}>Sombre</option>
+        </select>
+      </div>
+
+      <!-- Notifications -->
+      <div class="param-section">
+        <label>Notifications</label>
+        <div>
+          <label class="switch">
+            <input type="checkbox" name="notif_messages" {% if user.profile.notif_messages %}checked{% endif %}>
+            <span class="slider"></span>
+          </label> Messages
+        </div>
+        <div>
+          <label class="switch">
+            <input type="checkbox" name="notif_activites" {% if user.profile.notif_activites %}checked{% endif %}>
+            <span class="slider"></span>
+          </label> Activités & publications
+        </div>
+        <div>
+          <label class="switch">
+            <input type="checkbox" name="notif_emails" {% if user.profile.notif_emails %}checked{% endif %}>
+            <span class="slider"></span>
+          </label> Notifications par email
+        </div>
+        <div>
+          <label class="switch">
+            <input type="checkbox" name="notif_push" {% if user.profile.notif_push %}checked{% endif %}>
+            <span class="slider"></span>
+          </label> Notifications push
+        </div>
+      </div>
+
+      <!-- Langue -->
+      <div class="param-section">
+        <label for="langue">Langue de l'application</label>
+        <select name="langue" id="langue">
+          <option value="fr" {% if user.profile.langue == 'fr' %}selected{% endif %}>Français</option>
+          <option value="en" {% if user.profile.langue == 'en' %}selected{% endif %}>English</option>
+          <option value="es" {% if user.profile.langue == 'es' %}selected{% endif %}>Español</option>
+        </select>
+      </div>
+
+      <!-- Flux -->
+      <div class="param-section">
+        <label for="flux">Préférences de flux</label>
+        <select name="flux" id="flux">
+          <option value="recent" {% if user.profile.flux == 'recent' %}selected{% endif %}>Publications récentes</option>
+          <option value="populaire" {% if user.profile.flux == 'populaire' %}selected{% endif %}>Publications populaires</option>
+        </select>
+      </div>
+
+      <!-- Profil -->
+      <div class="param-section">
+        <label for="pseudo">Pseudo</label>
+        <input type="text" name="pseudo" id="pseudo" value="{{ user.username }}">
+      </div>
+
+      <div class="param-section">
+        <label for="bio">Bio courte</label>
+        <input type="text" name="bio" id="bio" value="{{ user.profile.bio }}">
+      </div>
+
+      <div class="param-section">
+        <label for="password">Changer mot de passe</label>
+        <input type="password" name="password" id="password" placeholder="Nouveau mot de passe">
+      </div>
+
+      <button type="submit" class="save-btn">Enregistrer les modifications</button>
+    </form>
+  </main>
+</body>
+</html>

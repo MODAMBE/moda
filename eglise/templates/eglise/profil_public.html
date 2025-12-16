@@ -1,0 +1,197 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mon Profil</title>
+
+    <link rel="stylesheet" href="{% static 'eglise/css/style.css' %}" />
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+    <style>
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1f2937, #111827);
+        color: #f3f4f6;
+        margin: 0;
+        padding: 0;
+        text-align: center;
+      }
+      
+      h1 {
+        margin: 20px 0;
+        font-size: clamp(1.8rem, 4vw, 2.5rem);
+        font-weight: bold;
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.1);
+        display: inline-block;
+        padding: 10px 30px;
+        border-radius: 20px;
+      }
+      
+      .profile-container {
+        width: 90%;
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.5);
+      }
+      
+      .avatar {
+        border-radius: 50%;
+        width: clamp(100px, 25vw, 150px);
+        height: clamp(100px, 25vw, 150px);
+        object-fit: cover;
+        border: 3px solid #0b84ff;
+        margin-bottom: 15px;
+      }
+      
+      .btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 25px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      
+      .btn-primary {
+        background: #0b84ff;
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: #2563eb;
+      }
+      
+      .btn-secondary {
+        background: #6b7280;
+        color: #fff;
+      }
+      .btn-secondary:hover {
+        background: #374151;
+      }
+      
+      .btn-camera {
+        background: #10b981;
+        color: #fff;
+      }
+      .btn-camera:hover {
+        background: #059669;
+      }
+      
+      .btn-connect {
+        background: #fbbf24;
+        color: #000;
+        width: auto;
+        padding: 12px 40px;
+        display: inline-block;
+        margin-top: 15px;
+      }
+      .btn-connect:hover {
+        background: #f59e0b;
+      }
+      
+      form input,
+      form select,
+      form textarea {
+        width: 100%;
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 10px;
+        border: none;
+        outline: none;
+        font-size: 1rem;
+      }
+      
+      .buttons-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin: 20px 0;
+      }
+      
+      .center-button {
+        text-align: center;
+      }
+      
+      @media (max-width: 600px) {
+        .buttons-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Mon Profil</h1>
+
+    <div class="profile-container">
+      <img id="avatarPreview"
+        src="{% if profile.image %}
+          {{ profile.image.url }}
+        {% else %}
+          {% static 'eglise/images/default-avatar.png' %}
+          
+
+
+          {% static 'images/default-avatar.png' %}
+        {% endif %}"
+        alt="{{ profile.pseudo_publique }}"
+        class="avatar" />
+
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" id="id_image" name="image" accept="image/*" style="display:none;" />
+        <input type="file" id="id_camera" name="image" accept="image/*" capture="environment" style="display:none;" />
+
+        <div class="buttons-grid">
+          <button type="button" class="btn btn-primary" onclick="document.getElementById('id_image').click();">Importer une photo</button>
+          <button type="button" class="btn btn-camera" onclick="document.getElementById('id_camera').click();">📷 Prendre une photo</button>
+          <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+          <button type="submit" formaction="{% url 'eglise:deconnexion' %}" class="btn btn-secondary">Ajouter un autre compte</button>
+        </div>
+
+        <!-- 🔸 Bouton centré -->
+        <div class="center-button">
+          <button type="button" class="btn btn-connect" onclick="window.location.href='{% url 'eglise:connexion' %}'">🔐 Connecter à l'autre compte</button>
+        </div>
+
+        {{ form.pseudo_publique }}
+        {{ form.bio }}
+        {{ form.theme }}
+        {{ form.langue }}
+        {{ form.flux }}
+        {{ form.notif_messages }}
+        {{ form.notif_activites }}
+        {{ form.notif_emails }}
+        {{ form.notif_push }}
+      </form>
+    </div>
+
+    <script>
+      const inputFile = document.getElementById('id_image')
+      const inputCamera = document.getElementById('id_camera')
+      const preview = document.getElementById('avatarPreview')
+      
+      preview.addEventListener('click', () => inputFile.click())
+      
+      inputFile.addEventListener('change', handlePreview)
+      inputCamera.addEventListener('change', handlePreview)
+      
+      function handlePreview(event) {
+        const file = event.target.files[0]
+        if (file) {
+          const reader = new FileReader()
+          reader.onload = function (e) {
+            preview.src = e.target.result
+          }
+          reader.readAsDataURL(file)
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,555 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Appel vidéo - {{ correspondant.username }}</title>
+
+    <link rel="stylesheet" href="{% static 'eglise/css/style.css' %}" />
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+
+    <style>
+      body {
+        font-family: 'Segoe UI', sans-serif;
+        margin: 0;
+        background: #121b22;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        color: #e1e1e1;
+        overflow: hidden;
+      }
+      
+      .container {
+        width: 100%;
+        height: 100vh;
+        background: #1e2a33;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .call-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #075e54;
+        padding: 12px;
+        border-radius: 0 0 15px 15px;
+        z-index: 10;
+      }
+      
+      .call-header .chat-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #25d366;
+      }
+      
+      .call-header .chat-name {
+        font-size: 18px;
+        font-weight: bold;
+        margin-left: 10px;
+        flex: 1;
+      }
+      
+      .call-header .status {
+        font-size: 12px;
+        color: #d9d9d9;
+      }
+      
+      .video-container {
+        flex: 1;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #000;
+        overflow: hidden;
+      }
+      
+      #remoteVideo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      /* Caméra locale en overlay responsive (en bas à droite) */
+      #localVideo {
+        width: 30%;
+        max-width: 250px;
+        height: auto;
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        border: 3px solid #25d366;
+        border-radius: 15px;
+        object-fit: cover;
+        z-index: 5;
+      }
+      
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin: 10px 0;
+        z-index: 20;
+      }
+      
+      .controls button {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: none;
+        font-size: 26px;
+        color: #fff;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      
+      .controls button:hover {
+        transform: scale(1.1);
+      }
+      
+      #hangup {
+        background: #e53935;
+      }
+      #mute {
+        background: #555;
+      }
+      #camera {
+        background: #128c7e;
+      }
+      
+      /* ================= Responsive ================= */
+      @media (max-width: 1024px) {
+        #localVideo {
+          width: 35%;
+          max-width: 200px;
+          bottom: 15px;
+          right: 15px;
+        }
+        .controls button {
+          width: 50px;
+          height: 50px;
+          font-size: 22px;
+        }
+        .controls {
+          gap: 20px;
+        }
+        .call-header .chat-avatar {
+          width: 45px;
+          height: 45px;
+        }
+        .call-header .chat-name {
+          font-size: 17px;
+        }
+      }
+      
+      @media (max-width: 768px) {
+        #localVideo {
+          width: 40%;
+          max-width: 160px;
+          bottom: 10px;
+          right: 10px;
+        }
+        .controls button {
+          width: 45px;
+          height: 45px;
+          font-size: 20px;
+        }
+        .controls {
+          gap: 15px;
+        }
+        .call-header .chat-avatar {
+          width: 40px;
+          height: 40px;
+        }
+        .call-header .chat-name {
+          font-size: 16px;
+        }
+      }
+      
+      @media (max-width: 480px) {
+        #localVideo {
+          width: 45%;
+          max-width: 140px;
+          bottom: 10px;
+          right: 10px;
+        }
+        .controls button {
+          width: 40px;
+          height: 40px;
+          font-size: 18px;
+        }
+        .controls {
+          gap: 10px;
+        }
+        .call-header .chat-avatar {
+          width: 35px;
+          height: 35px;
+        }
+        .call-header .chat-name {
+          font-size: 14px;
+        }
+      }
+      
+      /* Orientation portrait */
+      @media (orientation: portrait) {
+        .video-container {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- HEADER -->
+      <div class="call-header">
+        {% if correspondant.profile and correspondant.profile.image %}
+          <img src="{{ correspondant.profile.image.url }}" class="chat-avatar" />
+        {% else %}
+
+          <img src="{% static 'eglise/icons/default-profile.png' %}" class="chat-avatar" />
+
+          <img src="{% static 'icons/default-profile.png' %}" class="chat-avatar" />
+
+        {% endif %}
+        <span class="chat-name">{{ correspondant.username }}</span>
+        <span class="status" id="userStatus">En ligne ?</span>
+      </div>
+
+      <!-- VIDEOS -->
+      <div class="video-container">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideo" autoplay muted playsinline></video>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="controls">
+        <button id="mute">🔇</button>
+        <button id="camera">🎥</button>
+        <button id="hangup">❌</button>
+      </div>
+
+      <audio id="ringtone" src="{% static 'eglise/sounds/ringtone.mp3' %}" loop></audio>
+    </div>
+
+    <script>
+      // Elements
+      const localVideo = document.getElementById('localVideo')
+      const remoteVideo = document.getElementById('remoteVideo')
+      const muteBtn = document.getElementById('mute')
+      const cameraBtn = document.getElementById('camera')
+      const hangupBtn = document.getElementById('hangup')
+      const ringtone = document.getElementById('ringtone')
+      
+      // appel id fourni par la vue
+      const appelID = '{{ appel_id }}'
+      
+      // WebRTC / WebSocket variables
+      let localStream = null
+      let pc = null
+      let ws = null
+      let wsReady = false
+      let isMakingOffer = false
+      let polite = false // used to avoid glare (simplified)
+      let pendingCandidates = []
+      
+      // Ringtone controls (autoplay policies handled by user interaction)
+      function tryPlayRingtone() {
+        if (!ringtone) return
+        ringtone.play().catch(() => {})
+      }
+      function stopRingtone() {
+        if (!ringtone) return
+        try {
+          ringtone.pause()
+          ringtone.currentTime = 0
+        } catch (e) {}
+      }
+      
+      // Start local camera/audio but don't add tracks to Peer until negotiation.
+      async function startLocalMedia() {
+        if (localStream) return
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+          localVideo.srcObject = localStream
+        } catch (err) {
+          console.error('Erreur getUserMedia:', err)
+          alert("Impossible d'accéder à la caméra/micro: " + (err && err.message ? err.message : err))
+        }
+      }
+      
+      // Create PeerConnection and handlers
+      function createPeerConnection() {
+        if (pc) return pc
+      
+        pc = new RTCPeerConnection({
+          iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        })
+      
+        pc.onicecandidate = (event) => {
+          if (event.candidate && wsReady) {
+            ws.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }))
+          } else if (event.candidate) {
+            // buffer if ws not ready
+            pendingCandidates.push(event.candidate)
+          }
+        }
+      
+        pc.ontrack = (event) => {
+          // attach remote stream
+          remoteVideo.srcObject = event.streams[0]
+        }
+      
+        pc.onconnectionstatechange = () => {
+          if (!pc) return
+          console.log('PC connectionState:', pc.connectionState)
+          if (pc.connectionState === 'connected') {
+            stopRingtone()
+            // connected
+          } else if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+            stopRingtone()
+          }
+        }
+      
+        return pc
+      }
+      
+      // Add local tracks to pc (if available)
+      function addLocalTracksToPc() {
+        if (!pc || !localStream) return
+        localStream.getTracks().forEach((track) => {
+          // avoid adding duplicates
+          const already = pc.getSenders().some((s) => s.track && s.track.kind === track.kind)
+          if (!already) pc.addTrack(track, localStream)
+        })
+      }
+      
+      // Setup WebSocket dedicated for video
+      function initWebSocket() {
+        if (!appelID) {
+          console.error('appelID manquant dans le template.')
+          return
+        }
+        if (ws) return
+      
+        const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws'
+        const url = scheme + '://' + window.location.host + '/ws/video/' + appelID + '/'
+        ws = new WebSocket(url)
+      
+        ws.onopen = () => {
+          wsReady = true
+          console.log('WS video ouvert:', url)
+          // announce presence to others in the room
+          ws.send(JSON.stringify({ type: 'ready' }))
+        }
+      
+        ws.onmessage = async (evt) => {
+          let data = null
+          try {
+            data = JSON.parse(evt.data)
+          } catch (e) {
+            console.warn('WS JSON parse error', e)
+            return
+          }
+      
+          // handle message types
+          if (data.type === 'ready') {
+            // Another participant is ready -> if we haven't started negotiation, create offer
+            console.log('WS: ready reçu')
+            // If no pc created, create it
+            createPeerConnection()
+            await startLocalMedia()
+            addLocalTracksToPc()
+      
+            // create offer if we are not already making one
+            try {
+              isMakingOffer = true
+              const offer = await pc.createOffer()
+              await pc.setLocalDescription(offer)
+              ws.send(JSON.stringify({ type: 'offer', sdp: pc.localDescription }))
+              // play outgoing ringtone while waiting for answer
+              tryPlayRingtone()
+            } catch (err) {
+              console.error('Erreur createOffer:', err)
+            } finally {
+              isMakingOffer = false
+            }
+            return
+          }
+      
+          if (data.type === 'offer') {
+            console.log('WS: offer reçu')
+            createPeerConnection()
+            await startLocalMedia()
+            addLocalTracksToPc()
+      
+            try {
+              await pc.setRemoteDescription(new RTCSessionDescription(data.sdp))
+            } catch (err) {
+              console.error('Erreur setRemoteDescription(offer):', err)
+            }
+      
+            // create and send answer
+            try {
+              const answer = await pc.createAnswer()
+              await pc.setLocalDescription(answer)
+              ws.send(JSON.stringify({ type: 'answer', sdp: pc.localDescription }))
+              stopRingtone()
+            } catch (err) {
+              console.error('Erreur createAnswer:', err)
+            }
+      
+            return
+          }
+      
+          if (data.type === 'answer') {
+            console.log('WS: answer reçu')
+            try {
+              await pc.setRemoteDescription(new RTCSessionDescription(data.sdp))
+              stopRingtone()
+            } catch (err) {
+              console.error('Erreur setRemoteDescription(answer):', err)
+            }
+            return
+          }
+      
+          if (data.type === 'candidate' && data.candidate) {
+            // Add candidate (may need to buffer if pc not ready)
+            try {
+              if (!pc) {
+                // buffer until pc exists
+                pendingCandidates.push(data.candidate)
+              } else {
+                await pc.addIceCandidate(new RTCIceCandidate(data.candidate))
+              }
+            } catch (err) {
+              console.warn('Erreur addIceCandidate:', err)
+            }
+            return
+          }
+      
+          if (data.type === 'hangup') {
+            console.log('WS: hangup reçu')
+            stopRingtone()
+            cleanupCall()
+            return
+          }
+      
+          // ignore other types
+        }
+      
+        ws.onclose = () => {
+          wsReady = false
+          console.log('WS closed')
+        }
+      
+        ws.onerror = (e) => {
+          console.error('WS error', e)
+        }
+      }
+      
+      // Send any pending candidates after WS ready
+      function flushPendingCandidates() {
+        if (!wsReady) return
+        while (pendingCandidates.length) {
+          const c = pendingCandidates.shift()
+          ws.send(JSON.stringify({ type: 'candidate', candidate: c }))
+        }
+      }
+      
+      // Cleanup and hangup
+      function cleanupCall() {
+        try {
+          if (localStream) {
+            localStream.getTracks().forEach((t) => t.stop())
+            localStream = null
+            localVideo.srcObject = null
+          }
+        } catch (e) {}
+      
+        try {
+          if (pc) {
+            pc.close()
+            pc = null
+          }
+        } catch (e) {}
+      
+        try {
+          if (ws) {
+            try {
+              ws.send(JSON.stringify({ type: 'hangup' }))
+            } catch (e) {}
+            try {
+              ws.close()
+            } catch (e) {}
+            ws = null
+            wsReady = false
+          }
+        } catch (e) {}
+      
+        stopRingtone()
+      }
+      
+      // UI buttons
+      muteBtn.onclick = () => {
+        if (!localStream) return
+        localStream.getAudioTracks().forEach((t) => (t.enabled = !t.enabled))
+        muteBtn.textContent = muteBtn.textContent === '🔇' ? '🔊' : '🔇'
+      }
+      
+      cameraBtn.onclick = () => {
+        if (!localStream) return
+        localStream.getVideoTracks().forEach((t) => (t.enabled = !t.enabled))
+        cameraBtn.textContent = cameraBtn.textContent === '🎥' ? '🚫' : '🎥'
+      }
+      
+      hangupBtn.onclick = async () => {
+        // inform others
+        if (ws && wsReady) {
+          try {
+            ws.send(JSON.stringify({ type: 'hangup' }))
+          } catch (e) {
+            console.warn(e)
+          }
+        }
+        // update backend status if you have endpoint (optional): leave as-is to avoid changing other places
+        cleanupCall()
+        // redirect back to discussion after a small delay to allow messages to be sent
+        setTimeout(() => {
+          window.location.href = "{% url 'eglise:discussion_detail_user' correspondant.id %}"
+        }, 500)
+      }
+      
+      // Start: open ws and prepare local media but do not create offer until peer present
+      ;(function init() {
+        // open websocket dedicated to video
+        initWebSocket()
+      
+        // request local media permission (prepare preview)
+        startLocalMedia()
+          .then(() => {
+            // show preview in localVideo already handled
+          })
+          .catch(() => {
+            // ignore - already alerted inside startLocalMedia
+          })
+      
+        // Periodically flush candidates when ws ready
+        setInterval(() => {
+          if (wsReady) flushPendingCandidates()
+        }, 200)
+      
+        // Try to play ringtone for outgoing initial if desired. We will play ringtone when we create offer or receive offer.
+        // But to reduce autoplay issues we won't automatically play here — the negotiation will trigger tryPlayRingtone where needed.
+      })()
+    </script>
+  </body>
+</html>
